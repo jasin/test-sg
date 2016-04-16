@@ -1,10 +1,10 @@
 @setlocal
-@REM 17:07 22/01/2016
+@REM 20160416 - 22/01/2016
 @set DOINST=0
 @set TMPPRJ=test-sg
 @set TMPSRC=..
 @set TMPBGN=%TIME%
-@set TMPINS=F:\Projects\software
+@set TMPINS=X:\3rdParty
 @set TMPLOG=bldlog-1.txt
 
 @set TMPSG=X:\install\msvc100\simgear
