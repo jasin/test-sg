@@ -46,6 +46,19 @@ set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT
 set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT" )
 set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}" )
 
+set (SGDIR $ENV{SIMGEAR_DIR})
+if (SGDIR)
+    message(STATUS "*** User ENV SIMGEAR_DIR=${SGDIR}")
+    # file(READ ${SGDIR}/include/simgear/version.h SG_VER)
+    if (EXISTS "${SGDIR}/include/simgear/version.h")
+        message(STATUS "*** Found simgear/version.h - looks good...")
+    else ()    
+        message(WARNING "*** Unable to locate ${SGDIR}/include/simgear/version.h!")
+    endif ()
+else ()
+    message(STATUS "*** NO User SIMGEAR_DIR set in ENV.")
+endif ()
+
 # SIMGEAR_CORE_LIBRARIES, a list of the core static libraries
 # SIMGEAR_LIBRARIES, a list of all the static libraries (core + scene)
 # SIMGEAR_FOUND, if false, do not try to link to SimGear
