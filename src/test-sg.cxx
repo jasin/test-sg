@@ -284,21 +284,34 @@ int sg_path_tests()
     //    fprintf(stderr, "%s: Failed to reset path %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
     //    iret = 1;
     //}
+
+    bool dir_deleted = false;
     test_num++;
-    fprintf(stderr, "\n%s: Test %d - Removal of new path '%s'... now empty...\n", module, test_num, path.c_str());
-    if (!cwd.remove()) {
-        fprintf(stderr, "%s: Using SG.remove(), failed to remove path %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
-        iret = 1;
-#ifdef WIN32
-        if (unlink(path.c_str())) {
-            fprintf(stderr, "%s: Failed to remove path %s! %s (%d)\n", module, path.c_str(), strerror(errno), errno);
-            if (_rmdir(path.c_str()) ) {
-                fprintf(stderr, "%s: Failed to rmdir %s! %s (%d)\n", module, path.c_str(), strerror(errno), errno);
-            } else {
-                fprintf(stderr, "%s: Removed dir using rmdir %s!\n", module, path.c_str());
-            }
+    fprintf(stderr, "\n%s: Test %d - Removal of path '%s'... now empty, with SGPath::remove... should fail...\n", module, test_num, path.c_str());
+    // ERROR: SGPath::remove is to ONLY remove files!
+    // See: http://api-docs.freeflightsim.org/simgear/classSGPath.html#ae05c94f36fe03aad063adeca84077695
+    // so this should fail
+    if (cwd.remove()) {
+        fprintf(stderr, "%s: WHAT!, SGPath.remove(), REMOVED a path %s!\n", module, cwd.str().c_str() );
+        dir_deleted = true;
+    } else {
+        fprintf(stderr, "%s: AS EXPECTED, using SGPath.remove(), failed to remove path %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
+    }
+    // so how to remove a directory?
+    // AH: http://api-docs.freeflightsim.org/simgear/classsimgear_1_1Dir.html#a62f4d9c069adcd2c29950e40e1db265e
+    if (!dir_deleted) {
+        simgear::Dir d = path;  // cast string path into a SG DIRECTORY
+        test_num++;
+        fprintf(stderr, "\n%s: Test %d - Removal of path '%s', with simgear::Dir::remove...\n", module, test_num, path.c_str());
+        // this is an EMPTY directory, so do not need to set 'recursive',
+        // but another test would be to populate it with files AND directories, and test 'true'... another day...
+        // NOTE: This is used in SVNDirectory.cxx, which is what I think 'terrasync' uses
+        // See: http://api-docs.freeflightsim.org/simgear/SVNDirectory_8cxx_source.html#l00238
+        if (d.remove(false)) {
+            fprintf(stderr, "%s: That succeeded, as expected...\n", module);
+        } else {
+            fprintf(stderr, "%s: using simgear::Dir::remove(), failed to remove path %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
         }
-#endif
     }
 
     return iret;
