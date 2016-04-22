@@ -45,7 +45,7 @@ int fixDatParsing(const std::string &fixDat)
 
     sg_gzifstream in( path.str() );
     if ( !in.is_open() ) {
-        std::cerr << "Cannot open file: " << path;
+        std::cerr << "Cannot open file: " << path << std::endl;
         return 1;
     }
 
