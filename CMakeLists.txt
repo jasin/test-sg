@@ -72,6 +72,19 @@ else ()
     message(FATAL_ERROR, "SimGear NOT found!")
 endif ()
 
+#   ZLIB_INCLUDE_DIRS   - where to find zlib.h, etc.
+#   ZLIB_LIBRARIES      - List of libraries when using zlib.
+#   ZLIB_FOUND          - True if zlib found.
+find_package( ZLIB )
+if (ZLIB_FOUND)
+    message(STATUS "*** Found ZLIB inc ${ZLIB_INCLUDE_DIRS}, lib ${ZLIB_LIBRARIES}")
+    list(APPEND add_LIBS ${ZLIB_LIBRARIES})
+    include_directories( ${ZLIB_INCLUDE_DIRS} )
+    add_definitions( -DADD_ZLIB_TEST )
+else ()
+    message(STATUS "*** ZLIB not found!")
+endif ()
+
 # configuration file, if needed
 # configure_file( ${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h )
 # add_definitions( -DHAVE_CONFIG_H )
@@ -104,6 +117,21 @@ set(name test-sg)
 set(dir src)
 set(${name}_SRCS
     ${dir}/test-sg.cxx
+    )
+add_executable( ${name} ${${name}_SRCS} )
+if (add_LIBS)
+    target_link_libraries( ${name} ${add_LIBS} )
+endif ()
+if (MSVC)
+    set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
+endif ()
+# deal with install, if any...
+#install( TARGETS ${name} DESTINATION bin )
+
+set(name SGPath_test)
+set(dir src)
+set(${name}_SRCS
+    ${dir}/${name}.cxx
     )
 add_executable( ${name} ${${name}_SRCS} )
 if (add_LIBS)
