@@ -15,6 +15,8 @@
 #ifdef WIN32
 #include <direct.h>
 #include <io.h>
+#else
+#include <unistd.h> // for getcwd(), ...
 #endif
 #include <errno.h>
 #include <simgear/compiler.h>
@@ -300,7 +302,7 @@ int sg_path_tests()
     // so how to remove a directory?
     // AH: http://api-docs.freeflightsim.org/simgear/classsimgear_1_1Dir.html#a62f4d9c069adcd2c29950e40e1db265e
     if (!dir_deleted) {
-        simgear::Dir d = path;  // cast string path into a SG DIRECTORY
+        simgear::Dir d(path);  // cast string path into a SG DIRECTORY
         test_num++;
         fprintf(stderr, "\n%s: Test %d - Removal of path '%s', with simgear::Dir::remove...\n", module, test_num, path.c_str());
         // this is an EMPTY directory, so do not need to set 'recursive',

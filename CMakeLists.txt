@@ -42,6 +42,7 @@ if(WIN32 AND MSVC)
     set( CMAKE_DEBUG_POSTFIX "d" )
 else()
     # items for unix
+    set(WARNING_FLAGS "${WARNING_FLAGS} -Wno-unused-variable -Wno-unused-but-set-variable")
 endif()
 
 set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT" )
@@ -70,6 +71,20 @@ if (SIMGEAR_FOUND)
     message(STATUS, "*** SimGear found. lib ${SIMGEAR_CORE_LIBRARIES} inc ${SIMGEAR_INCLUDE_DIRS}")
     list(APPEND add_LIBS ${SIMGEAR_CORE_LIBRARIES})
     include_directories( ${SIMGEAR_INCLUDE_DIRS} )
+    if (NOT WIN32)
+        find_package(Threads REQUIRED)
+        # The following variables are set
+        #  CMAKE_THREAD_LIBS_INIT     - the thread library
+        #  CMAKE_USE_SPROC_INIT       - are we using sproc?
+        #  CMAKE_USE_WIN32_THREADS_INIT - using WIN32 threads?
+        #  CMAKE_USE_PTHREADS_INIT    - are we using pthreads
+        #  CMAKE_HP_PTHREADS_INIT     - are we using hp pthreads
+        #  Threads_FOUND
+        if (Threads_FOUND)
+            message(STATUS "*** Threads found lib ${CMAKE_THREAD_LIBS_INIT}")
+            list(APPEND add_LIBS ${CMAKE_THREAD_LIBS_INIT})
+        endif ()
+    endif ()
 else ()
     message(FATAL_ERROR, "SimGear NOT found!")
 endif ()

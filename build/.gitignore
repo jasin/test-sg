@@ -14,3 +14,7 @@ ipch/*
 *.sln
 *.suo
 RelWithDebInfo/*
+Makefile
+SGPath_test
+test-sg
+
