@@ -2,6 +2,8 @@
 # CMakeLists.txt, generated gencmake.pl, on 2016/01/22 17:04:57
 cmake_minimum_required( VERSION 2.8.8 )
 
+include (CheckLibraryExists)    # needed for unix, in FindSimGear.cmake
+
 # CMakeScripts or use the ones that come by default with CMake.
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 
