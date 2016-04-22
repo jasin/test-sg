@@ -1,7 +1,7 @@
 #!/bin/sh
 #< build-me.sh - test-sg project - 20160422
 BN=`basename $0`
-TMPSG="/media/Disk2/FG/fg21/install/simgear"
+TMPSG="/media/Disk2/FG/fg23/install/simgear"
 TMPFIL="$TMPSG/include/simgear/version.h"
 
 if [ ! -d "$TMPSG" ]; then
@@ -16,7 +16,10 @@ if [ ! -f "$TMPFIL" ]; then
     exit 1
 fi
 
-
+echo ""
+cat $TMPFIL
+echo ""
+echo "$BN: Aove is version of SimGear bing used..."
 echo ""
 echo "$BN: Some suggested cmake options to use for debug..."
 echo "  -DCMAKE_VERBOSE_MAKEFILE=TRUE - use a verbose Makefile good to see flags. switches, libraries, etc..."
