@@ -13,3 +13,4 @@ ipch/*
 *.sdf
 *.sln
 *.suo
+RelWithDebInfo/*
