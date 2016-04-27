@@ -13,11 +13,14 @@
 #include <string.h> // for strdup(), ...
 #include <string>
 #ifdef WIN32
+// #include <Windows.h>
 #include <direct.h>
 #include <io.h>
 #else
 #include <unistd.h> // for getcwd(), ...
 #endif
+#include <fstream>
+#include <iostream>
 #include <errno.h>
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
@@ -169,6 +172,34 @@ DiskType is_file_or_directory ( const char * path )
 	return MDT_NONE;
 }
 
+int parse_file(std::string &cwd, bool exp_close)
+{
+    char href[1024];
+    SGPath p(cwd);
+    if (!p.exists()) {
+        fprintf(stderr, "%s: File '%s' does not exits!\n", module, cwd.c_str());
+        return 1;
+    }
+    std::ifstream file(cwd.c_str());
+    if (!file.is_open()) {
+        fprintf(stderr, "%s: Unable to open file '%s!\n", module, cwd.c_str());
+        return 1;
+    }
+    while (!file.eof()) {
+        file.getline(href, 1024);
+    }
+    //if (exp_close)
+    //    file.close();
+    // note: no specific close, but the destructor of ifstream should do that...
+    return 0;
+}
+
+//void pause_secs(int secs)
+//{
+//    int ms = secs * 1000;
+//    Sleep(ms);
+//}
+
 //////////////////////////////////////////////////////////////////////
 int sg_path_tests()
 {
@@ -200,9 +231,9 @@ int sg_path_tests()
     cwd.append(path);
     path = cwd.str();
     SGPath cwd2(path);   // keep a second copy
+    int r2;
     fprintf(stderr, "%s: Built a new path to use '%s'...\n", module, path.c_str());
     if (stat(path.c_str(),&buf) == 0) {
-        int r2;
         fprintf(stderr, "%s: New path to use '%s' exists... attempting deletion...\n", module, path.c_str());
         if (buf.st_mode && M_IS_DIR) {
             r2 = rmdir(path.c_str());
@@ -227,17 +258,20 @@ int sg_path_tests()
            fprintf(stderr, "%s: New path '%s' created...\n", module, cwd.str().c_str());
         }
     }
+
+
     // Create a FILE
     cwd.append(file);
     //SGFile sgf(cwd.str());
     test_num++;
     fprintf(stderr, "\n%s: Test %d - Write a file and attempt a delete. First with handle open, then after closed...\n", module, test_num);
     FILE *fp = fopen( cwd.str().c_str(),"w");
+    size_t res;
     if (!fp) {
         fprintf(stderr, "%s: Failed to create file %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
         iret = 1;
     } else {
-        size_t res = fwrite(cwd.str().c_str(), 1, cwd.str().size(), fp);
+        res = fwrite(cwd.str().c_str(), 1, cwd.str().size(), fp);
         if (res == cwd.str().size()) {
             fprintf(stderr, "%s: Written file '%s', %d bytes.\n", module, cwd.str().c_str(), (int)res);
         } else {
@@ -275,10 +309,45 @@ int sg_path_tests()
             }
         }
     }
+
+    // create a second file
+    test_num++;
+    fprintf(stderr, "\n%s: Test %d - Write a 2nd file, open as ifstream in new context, and attempt a delete on return...\n", module, test_num);
+    fp = fopen( cwd.str().c_str(),"w");
+    if (fp) {
+        res = fwrite(cwd.str().c_str(), 1, cwd.str().size(), fp);
+        if (res == cwd.str().size()) {
+            fprintf(stderr, "%s: Written file '%s', %d bytes.\n", module, cwd.str().c_str(), (int)res);
+            fclose(fp);
+            parse_file(cwd.str(), false);
+        } else {
+            fprintf(stderr, "%s: Failed to write to file %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
+            iret = 1;
+            fclose(fp);
+        }
+    }
+
+    bool del_done = true;
+    r2 = unlink(cwd.str().c_str());
+    if (r2) {
+        fprintf(stderr, "%s: Failed to delete 2nd file %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
+        del_done = false;
+    } else {
+        fprintf(stderr, "%s: Deleted 2nd file %s.\n", module, cwd.str().c_str());
+    }
+    if (!del_done) {
+        //pause_secs(1);
+        r2 = unlink(cwd.str().c_str());
+        if (r2) {
+            fprintf(stderr, "%s: Failed to delete 2nd file %s! %s (%d)\n", module, cwd.str().c_str(), strerror(errno), errno);
+            del_done = false;
+        } else {
+            fprintf(stderr, "%s: Deleted 2nd file %s.\n", module, cwd.str().c_str());
+        }
+    }
+
     //if (iret)
     //    return iret;
-
-
 
     cwd = path;
 
