@@ -155,10 +155,13 @@ void parseCache2(const char *localPath)
     SG_LOG(SG_TERRASYNC, SG_WARN, "invalid cache file [missing header token]:" << p << " '" << href << "'");
     return;
   }
+  printf("magic : %s\n", href);
     
     std::string vccUrl;
     file.getline(href, 1024);
     vccUrl = href;
+
+  printf("vccUrl: %s\n\n", vccUrl.c_str());
 
   std::vector<std::string> cache;
   while (!file.eof()) {
@@ -201,6 +204,7 @@ void parseCache2(const char *localPath)
               //child->setVersionName(versionName);
           }
       } // of done self test
+      printf("href: %s\nvers: %s\n", href, versionName);
     } // of line-state switching 
   } // of lines in string vector
 }
@@ -239,8 +243,10 @@ int parse_args( int argc, char **argv )
         }
     }
 #if (defined(_MSC_VER) && !defined(NDEBUG))
-    if (!usr_input)
-        usr_input = "D:\\FG\\terrasync\\Terrain\\e110n20\\e114n22";
+    if (!usr_input) {
+        //usr_input = "D:\\FG\\terrasync\\Terrain\\e110n20\\e114n22";
+        usr_input = "C:\\Users\\user\\Downloads";
+    }
 #endif
     if (!usr_input) {
         printf("%s: No user input found in command!\n", module);
@@ -258,7 +264,8 @@ int main( int argc, char **argv )
     if (iret)
         return iret;
 
-    parseCache(usr_input); // actions of app
+    parseCache2(usr_input); // actions of app
+    //parseCache(usr_input); // actions of app
 
     return iret;
 }
