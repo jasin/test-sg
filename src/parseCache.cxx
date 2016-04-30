@@ -120,6 +120,80 @@ void parseCache(const char *localPath)
 }
 
 
+void parseCache2(const char *localPath)
+{
+  SGPath p(localPath);
+  p.append(DAV_CACHE_NAME);
+  if (!p.exists()) {
+    return;
+  }
+    
+  char href[1024];
+  char versionName[128];
+  LineState lineState = LINESTATE_HREF;
+  std::ifstream file(p.c_str());
+    if (!file.is_open()) {
+        SG_LOG(SG_TERRASYNC, SG_WARN, "unable to open cache file for reading:" << p);
+        return;
+    }
+  bool doneSelf = false;
+    
+  file.getline(href, 1024);
+  if (strcmp(CACHE_VERSION_4_TOKEN, href)) {
+    SG_LOG(SG_TERRASYNC, SG_WARN, "invalid cache file [missing header token]:" << p << " '" << href << "'");
+    return;
+  }
+    
+    std::string vccUrl;
+    file.getline(href, 1024);
+    vccUrl = href;
+
+  std::vector<std::string> cache;
+  while (!file.eof()) {
+      file.getline(href, 1024);
+      cache.push_back(href);
+  }
+  file.close(); // done with the file
+
+  std::vector<std::string>::iterator it = cache.begin();
+  for ( ; it != cache.end(); it++) {
+    if (lineState == LINESTATE_HREF) {
+      strcpy(href, (*it).c_str());
+      lineState = LINESTATE_VERSIONNAME;
+    } else {
+      assert(lineState == LINESTATE_VERSIONNAME);
+      strcpy(versionName, (*it).c_str());
+      lineState = LINESTATE_HREF;
+      char* hrefPtr = href;
+
+      if (!doneSelf) {
+#if 0 // 00000000000000000000000000000000000000
+        if (!dav) {
+          dav = new DAVCollection(hrefPtr);
+          dav->setVersionName(versionName);
+        } else {
+          assert(string(hrefPtr) == dav->url());
+        }
+        
+        if (!vccUrl.empty()) {
+            dav->setVersionControlledConfiguration(vccUrl);
+        }
+        _cachedRevision = versionName;
+#endif // 0000000000000000000000000000000000        
+        doneSelf = true;
+      } else {
+          //DAVResource* child = addChildDirectory(hrefPtr)->collection();
+          //string s = strutils::strip(versionName);
+          std::string s = simgear::strutils::strip(versionName);
+          if (!s.empty()) {
+              //child->setVersionName(versionName);
+          }
+      } // of done self test
+    } // of line-state switching 
+  } // of lines in string vector
+}
+
+
 int parse_args( int argc, char **argv )
 {
     int i,i2,c;
