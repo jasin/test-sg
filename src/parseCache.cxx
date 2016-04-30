@@ -30,6 +30,8 @@ void give_help( char *name )
     printf("%s: usage: [options] usr_input\n", module);
     printf("Options:\n");
     printf(" --help  (-h or -?) = This help and exit(2)\n");
+    printf(" Given a path input, will parse the .terrasync_cache file,\n");
+    printf(" if one exists.\n");
     // TODO: More help
 }
 
@@ -226,7 +228,7 @@ int parse_args( int argc, char **argv )
             usr_input = strdup(arg);
         }
     }
-#ifndef NDEBUG
+#if (defined(_MSC_VER) && !defined(NDEBUG))
     if (!usr_input)
         usr_input = "D:\\FG\\terrasync\\Terrain\\e110n20\\e114n22";
 #endif
@@ -241,6 +243,7 @@ int parse_args( int argc, char **argv )
 int main( int argc, char **argv )
 {
     int iret = 0;
+    sglog().setLogLevels(SG_ALL, SG_DEBUG);    // is this sufficient to get SG_LOG output? Seem NOT
     iret = parse_args(argc,argv);
     if (iret)
         return iret;
