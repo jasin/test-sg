@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <assert.h>
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
@@ -24,6 +25,14 @@ using namespace std;
 static const char *module = "parseCache";
 
 static const char *usr_input = 0;
+
+#undef SG_LOG
+#define SG_LOG(C,P,M) { \
+    std::ostringstream ss; \
+    ss << M; \
+    printf("%s\n", ss.str().c_str()); \
+}
+
 
 void give_help( char *name )
 {
@@ -51,6 +60,7 @@ void parseCache(const char *localPath)
   SGPath p(localPath);
   p.append(DAV_CACHE_NAME);
   if (!p.exists()) {
+    SG_LOG(SG_TERRASYNC, SG_WARN, "unable to locate cache file :" << p);
     return;
   }
     
