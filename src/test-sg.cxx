@@ -172,7 +172,7 @@ DiskType is_file_or_directory ( const char * path )
 	return MDT_NONE;
 }
 
-int parse_file(std::string &cwd, bool exp_close)
+int parse_file(std::string cwd, bool exp_close)
 {
     char href[1024];
     SGPath p(cwd);

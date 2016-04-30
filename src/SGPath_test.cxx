@@ -123,7 +123,7 @@ int fixDatParsing(const std::string &fixDat)
         dupe.lon = lon;
         dupe.lnn = lineNumber + 1;
         // keep a quick list of duplicates
-        if (pd = ident_is_dupe( vIDS, ident)) {
+        if ((pd = ident_is_dupe( vIDS, ident)) != 0) {
             if (!ident_is_dupe( vDupes, ident )) {
                 vDupes.push_back(*pd);
             }

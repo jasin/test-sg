@@ -17,4 +17,5 @@ RelWithDebInfo/*
 Makefile
 SGPath_test
 test-sg
+parseCache
 
