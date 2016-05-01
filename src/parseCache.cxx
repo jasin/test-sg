@@ -177,7 +177,7 @@ void parseCache2(const char *localPath)
       lineState = LINESTATE_VERSIONNAME;
     } else {
       assert(lineState == LINESTATE_VERSIONNAME);
-      strcpy(versionName, (*it).c_str());
+      strcpy(versionName, it->c_str());
       lineState = LINESTATE_HREF;
       char* hrefPtr = href;
 
