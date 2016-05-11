@@ -19,7 +19,13 @@
 @set UZ_OPT=x
 @set MOV_CMD=move
 @set MOV_OPT=
-@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat"
+@REM Switch MSVC Version
+@set _MSVS=10
+@set _MSNUM=1600
+@REM set _MSVS=12
+@REM set _MSNUM=1800
+@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio %MSVS%.0\VC\vcvarsall.bat"
+@set GENERATOR="Visual Studio %_MSVS% Win64"
 @set HAD_ERROR=0
 
 @set TMP3RD=3rdParty.x64
@@ -40,7 +46,7 @@
 @goto EXIT
 )
 
-@call setupqt64
+@REM call setupqt64
 
 @echo %0: Begin %DATE% %TIME% in %CD% > %LOGFIL%
 @echo # Error log %DATE% %TIME% > %ERRLOG%
@@ -147,11 +153,11 @@ md %TMP_BLD%
 
 CD %TMP_BLD%
 
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build"
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build"
 )
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
@@ -270,12 +276,12 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
 )
 
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake config/gen %TMP_SRC%
@@ -446,11 +452,11 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -510,11 +516,11 @@ if NOT EXIST %TMP_SRC%\nul (
 )
 
 CD %TMP_SRC%
-ECHO Doing: 'nmake -f makefile.vc MSVC_VER=1600 GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' %BLDLOG%
+ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'nmake -f makefile.vc MSVC_VER=1600 GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' to %LOGFIL%
+ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' to %LOGFIL%
 )
-nmake -f makefile.vc MSVC_VER=1600 GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES %BLDLOG%
+nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit nmake building source %TMP_SRC% in %CD%
@@ -532,6 +538,7 @@ xcopy %WORKSPACE%\libgdal-source\alg\gdal_alg.h %WORKSPACE%\%TMP3RD%\include\ /y
 xcopy %WORKSPACE%\libgdal-source\alg\gdalwarper.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\frmts\vrt\gdal_vrt.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\ogr\ogr*.h %WORKSPACE%\%TMP3RD%\include\ /y /f
+xcopy %WORKSPACE%\libgdal-source\ogr\ogrsf_frmts\ogrsf_frmts.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\port\cpl*.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\gdal_i.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
 xcopy %WORKSPACE%\libgdal-source\gdal.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
@@ -590,11 +597,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -779,7 +786,7 @@ CD %TMP_BLD%
 )
 
 @REM -DZLIB_LIBRARY="%WORKSPACE%\%TMP3RD%\lib\zlib.lib" -DZLIB_INCLUDE_DIR="%WORKSPACE%\%TMP3RD%\include" 
-@set TMP_OPS=-G "Visual Studio 10 Win64" -DCMAKE_PREFIX_PATH="%TMP_PRE%" -DCGAL_Boost_USE_STATIC_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcgal-build\build"
+@set TMP_OPS=-G %GENERATOR% -DCMAKE_PREFIX_PATH="%TMP_PRE%" -DCGAL_Boost_USE_STATIC_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcgal-build\build"
 
 @ECHO Doing: 'cmake ..\%TMP_SRC% %TMP_OPS% %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -877,11 +884,11 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' to %LOGFIL%
 ) 
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1016,11 +1023,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-@echo Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' %BLDLOG%
+@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' to %LOGFIL%
+@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1098,11 +1105,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-@echo Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' %BLDLOG%
+@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' to %LOGFIL%
+@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1169,11 +1176,11 @@ md %TMP_BLD%
 
 CD %TMP_BLD%
 
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
 )
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
