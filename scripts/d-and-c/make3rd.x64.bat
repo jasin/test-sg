@@ -11,6 +11,7 @@
 @REM Renamed build3rd.x64.bat - v1.0.1 - 20140811
 @REM ################################################################################
 @set "WORKSPACE=%CD%"
+@if EXIST ..\..\.git\nul goto NOT_IN_SRC
 @set TMPDN3RD=make3rd.x64.txt
 
 @set GET_EXE=wget
@@ -24,7 +25,7 @@
 @set _MSNUM=1600
 @REM set _MSVS=12
 @REM set _MSNUM=1800
-@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat"
+@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0\VC\vcvarsall.bat"
 @set GENERATOR=Visual Studio %_MSVS% Win64
 @set HAD_ERROR=0
 
@@ -1292,6 +1293,11 @@ IF %HAVELOG% EQU 1 (
 @echo Error: from MD %TMP_BLD%!!!
 @goto ISERR
 
+:NOT_IN_SRC
+@set /A HAD_ERROR+=1
+@echo.
+@echo Error: Do NOT do a build in the repo source! %CD%
+@goto ISERR
 
 :ISERR
 @REM echo.
