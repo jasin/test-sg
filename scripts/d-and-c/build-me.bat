@@ -1,1 +1,3 @@
-call d-and-c %*
+call d-and-c %* simgear flightgear
+
+
