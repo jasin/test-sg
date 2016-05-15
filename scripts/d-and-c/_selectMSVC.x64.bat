@@ -1,5 +1,5 @@
-@setlocal
-@set DBG_MSVC=1
+@REM setlocal
+@REM set DBG_MSVC=1
 @REM After testing, the above will be removed
 @REM is meant to be called from another BAT to set the ENV
 @REM ##############################################################
@@ -136,7 +136,7 @@
 
 :END
 @REM For debug ONLY
-@endlocal
+@REM endlocal
 @exit /b %TMPERR%
 
 @REM eof

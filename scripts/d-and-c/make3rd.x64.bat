@@ -3,16 +3,52 @@
 @REM Build 3rdParty components prior to building flightgear
 @REM ================================================================================
 @REM ################################################################################
-@REM started with from : http://wiki.flightgear.org/Howto:Build_3rdParty_library_for_Windows
-@REM ################################################################################
+@REM 20160513 - v1.0.5 - Use external _selectMSVC.x64 to set some variables for us
 @REM 20160511 - v1.0.4 - Add PLIB build, and install, through special PLIB-1.8.5.zip with a CMakeLists.txt
 @REM 20160510 - v1.0.3 - Add OpenAL build, and install, through openal-build.bat
 @REM 20160509 - v1.0.2 - Massive updates build3rd.x64.bat, including doing Boost
-@REM Renamed build3rd.x64.bat - v1.0.1 - 20140811
+@REM 20140811 - v1.0.1 - Renamed build3rd.x64.bat
 @REM ################################################################################
+@REM started with from : http://wiki.flightgear.org/Howto:Build_3rdParty_library_for_Windows
+@REM ################################################################################
+@set TMP_MSVC=_selectMSVC.x64.bat
 @set "WORKSPACE=%CD%"
 @if EXIST ..\..\.git\nul goto NOT_IN_SRC
+@if NOT EXIST %TMP_MSVC% goto NO_MSVC_SEL 
 @set TMPDN3RD=make3rd.x64.txt
+@if EXIST %TMPDN3RD% (
+@echo.
+@type %TMPDN3RD%
+@echo File %TMPDN3RD% already exists, so this has been run before...
+@echo Delete this file to run this batch again
+@echo.
+@goto EXIT
+)
+@set HAD_ERROR=0
+
+@REM Switch MSVC Version
+@set _MSVS=0
+@set _MSNUM=0
+@set VS_BAT=
+@set GENERATOR=
+@call %TMP_MSVC%
+@if "%GENERATOR%x" == "x" (
+@set /A HAD_ERROR+=1
+@echo.
+@echo No GENERATOR set! %TMP_MSVC% FAILED! **FIX ME**
+@echo.
+@goto EXIT
+)
+@if "%VS_BAT%x" == "x" (
+@set /A HAD_ERROR+=1
+@echo.
+@echo No ENV VS_BAT SET_BAT set! %TMP_MSVC% FAILED! **FIX ME**
+@echo.
+@goto EXIT
+)
+
+@REM MSVC has been setup, do NOT call this a 2nd time
+@set VS_BAT=
 
 @set GET_EXE=wget
 @set GET_OPT=-O
@@ -20,14 +56,6 @@
 @set UZ_OPT=x
 @set MOV_CMD=move
 @set MOV_OPT=
-@REM Switch MSVC Version
-@set _MSVS=10
-@set _MSNUM=1600
-@REM set _MSVS=12
-@REM set _MSNUM=1800
-@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0\VC\vcvarsall.bat"
-@set GENERATOR=Visual Studio %_MSVS% Win64
-@set HAD_ERROR=0
 
 @set TMP3RD=3rdParty.x64
 @set PERL_FIL=%WORKSPACE%\rep32w64.pl
@@ -38,14 +66,6 @@
 @set ERRLOG=%WORKSPACE%\error-2.txt
 @set ADD_GDAL=0
 @set HAVELOG=1
-
-@if EXIST %TMPDN3RD% (
-@echo.
-@echo File %TMPDN3RD% already exists, so this has been run before...
-@echo Delete this file to run this batch again
-@echo.
-@goto EXIT
-)
 
 @REM call setupqt64
 
@@ -105,7 +125,8 @@ md %WORKSPACE%\%TMP3RD%\lib
 md %WORKSPACE%\%TMP3RD%\include
 )
 
-CALL %SET_BAT% amd64
+@REM Already done... do not repeat... anyway should be VS_BAT BUILD_BITS
+@REM CALL %SET_BAT% amd64
 
 @REM TEST JUMP
 @REM GOTO DO_CGAL
@@ -783,7 +804,8 @@ CD %TMP_BLD%
 @if NOT EXIST ..\%TMP_SRC%\CMakeLists.txt goto NOCGALCMAKE
 
 @if EXIST CMakeCache.txt (
-@del CMakeCache.txt >nul
+@REM This ia a BIG search - do NOT repeat it every time...
+@REM del CMakeCache.txt >nul
 )
 
 @REM -DZLIB_LIBRARY="%WORKSPACE%\%TMP3RD%\lib\zlib.lib" -DZLIB_INCLUDE_DIR="%WORKSPACE%\%TMP3RD%\include" 
@@ -1213,25 +1235,32 @@ cmake --build . --config Release --target INSTALL %BLDLOG%
 xcopy %WORKSPACE%\plib-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
 xcopy %WORKSPACE%\plib-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 @REM xcopy %WORKSPACE%\plib-build\build\bin\zlib.dll %WORKSPACE%\%TMP3RD%\bin /y /q
-
+@echo Done PLIB...
 :DN_PLIB
 
 @REM external builds
-@REM if EXIST openal-build.bat (
-@REM call openal-build.bat
-@REM @if ERRORLEVEL 1 (
-@REM @set /A HAD_ERROR+=1
-@REM @set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
-@REM )
+:DO_AL
+@REM Avoid re-doing OpenAL if it already appears installed
+@if EXIST "%WORKSPACE%\%TMP3RD%\include\AL\al.h" goto DN_AL
+@if EXIST openal-build.bat (
+@echo Doing an OpenAL build and install...
+@call openal-build.bat
+@if ERRORLEVEL 1 (
+@set /A HAD_ERROR+=1
+@set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
+)
+@set _TMP_LIBS=%_TMP_LIBS% OpenAL
+:DN_AL
 
 :END
 cd %WORKSPACE%
 
 @if NOT %HAD_ERROR% EQU 0 goto ISERR
+@echo =================================== %BLDLOG%
 @echo Appears a fully successful build... %BLDLOG%
 @echo Add deps %_TMP_LIBS% to %TMP3RD% %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@REM ECHO Doing: 'cmake --build . --config Release --target INSTALL' to %LOGFIL%
+@echo.
 @echo Appears a fully successful build... to %LOGFIL%
 @echo Add deps %_TMP_LIBS% to %TMP3RD%
 )
@@ -1239,6 +1268,7 @@ IF %HAVELOG% EQU 1 (
 @REM Create the already done file...
 @echo Done 3rdParty build %DATE% %TIME% > %TMPDN3RD%
 @echo End: Created file %DATE% %TIME% %CD%\%TMPDN3RD%
+@echo.
 :EXIT
 @endlocal
 @exit /b 0
@@ -1297,6 +1327,12 @@ IF %HAVELOG% EQU 1 (
 @set /A HAD_ERROR+=1
 @echo.
 @echo Error: Do NOT do a build in the repo source! %CD%
+@goto ISERR
+
+:NO_MSVC_SEL
+@set /A HAD_ERROR+=1
+@echo.
+@echo Error: Can NOT locate %TMP_MSVC% to setup MSVC environment
 @goto ISERR
 
 :ISERR
