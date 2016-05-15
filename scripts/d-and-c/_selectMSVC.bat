@@ -1,28 +1,40 @@
 @setlocal
+@set DBG_MSVC=1
+@REM After testing, the above will be removed
+@REM is meant to be called from another BAT to set the ENV
+@REM ##############################################################
+@REM Setting -
+@REM TMPERR = should be zero on exit
+@REM _MSVS  = Visual Studion Version
+@REM _MSNUM = MS version emitted
+@REM VS_PATH = THe root path to the MSVC installed
+@REM VS_BAT = Usually vcvarsall.bat
+@REM BUILD_BITS = The parameter to use when calling the above
+@REM GENERATOR = The cmake -G value
+@REM ##############################################################
 @set TMPERR=0
 @REM Switch MSVC Version
 @set _MSVS=10
 @set _MSNUM=1600
-@REM set _MSVS=12
-@REM set _MSNUM=1800
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
 @set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
 @set GENERATOR=Visual Studio %_MSVS% Win64
-
-@REM ######################### CHECK AVAILABLE TOOLS ######################################
 @IF EXIST "%VS_PATH%" goto GOT_VS_PATH
 @set _MSVS=12
 @set _MSNUM=1800
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
-@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
+@REM set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
 @set GENERATOR=Visual Studio %_MSVS% Win64
 @IF EXIST "%VS_PATH%" goto GOT_VS_PATH
+@REM Could search for other VERSIONS
+@REM *******************************
 @goto NO_VS_PATH
 
 :GOT_VS_PATH
 @IF NOT exist "%VS_BAT%" goto NO_VS_BAT
+@REM ######################### CHECK AVAILABLE TOOLS ######################################
 
 @echo Set ARCHITEXTURE, based on PROCESSOR_ARCHITECTURE=%BUILD_BITS%
 @REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
@@ -52,7 +64,9 @@
 @echo 1: Checking for "%MSVCBIN%" ...
 @if EXIST "%MSVCBIN%" goto GOT_BIN
 @echo Warning: Can NOT locate "%MSVCBIN%
-@set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvarsx86_amd64.bat"
+@set BUILD_BITS=x86_amd64
+@set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars%BUILD_BITS%.bat"
+
 @echo 2: Checking for "%MSVCBIN%" ...
 @if EXIST "%MSVCBIN%" goto GOT_BIN
 @REM oops found nothing... what to do???
@@ -60,6 +74,7 @@
 @echo Can NOT locate neither x86_amd64 nor amd64. Maybe no 64-bit build!
 @echo *** FIX ME *** if some other BUILD_BITS=%BUILD_BITS% is correct...
 @set TMPERR=1
+@set MSVCBIN=
 @goto END
 
 :GOT_BIN
@@ -67,7 +82,12 @@
 @echo Will: CALL "%VS_BAT%" %BUILD_BITS%
 @call "%VS_BAT%" %BUILD_BITS%
 @if ERRORLEVEL 1 goto BAT_FAILED
-@echo Have set the MSVC environment...
+
+@echo Have set the MSVC%_MSVS% (%_MSNUM%) environment... Platform=%Platform%
+@if "%DBG_MSVC%x" == "x" goto END
+@REM #######################################################
+@REM Runs some verification tests...
+
 @call nmake /? >nul
 @if ERRORLEVEL 1 goto NMAKE_FAILED
 @echo.
@@ -114,8 +134,8 @@
 	@echo.
 @goto END
 
-
 :END
+@REM For debug ONLY
 @endlocal
 @exit /b %TMPERR%
 
