@@ -1,6 +1,8 @@
 @setlocal
 @echo off
 @REM History, growing upwards...
+@REM d-and-c.x64.bat v1.3.10 20160515 - use external _selectMSVC.x64.bat ...
+@REM d-and-c.x64.bat v1.3.9 20160515 - Name change... add .x64 build ...
 @REM d-and-c.bat v1.3.8 20160510 geoff - Fix config, gen, ...
 @REM d-and-c.bat v1.3.7 20160509 geoff - Boost done in make3rd.x64 run
 @REM d-and-c.bat v1.3.6 20160428 geoff - added SG/FG Debug build /D
@@ -9,6 +11,8 @@
 @REM Original: Clement de l'Hamaide - Oct 2013
 @REM Required software: Visual Studio 10, CMake, SVN, GIT, gmp and libcgal
 @REM 
+@set HAD_ERROR=0
+set  error=0
 @set PWD=%CD%
 @set INSTALL_DIR=%PWD%\install
 @REM set FG_ROOT=x:\fgdata
@@ -30,26 +34,40 @@
 @if NOT EXIST %TMPDN3RD% goto NO3RD
 
 @REM ######################################################################################
-@REM ######################################################################################
-@REM #####    YOU SHOULD CHANGE FOLLOWING VARIABLES IN ACCORDANCE WITH YOUR SYSTEM    #####
-@REM ######################################################################################
-@REM ######################################################################################
+@REM externa; setup
+@set TMP_MSVC=_selectMSVC.x64.bat
+@set "WORKSPACE=%CD%"
+@if NOT EXIST %TMP_MSVC% goto NO_MSVC_SEL 
 
-@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
-@REM set "BUILD_BITS=amd64"
-@REM set "BUILD_BITS=x86_amd64"
-@REM set "BUILD_BITS=x86"
-@set "GENERATOR=Visual Studio 10 Win64"
-@REM set "GENERATOR=Visual Studio 10"
-@set "VS_PATH=C:\Program Files (x86)\Microsoft Visual Studio 10.0"
+@REM Switch MSVC Version
+@set _MSVS=0
+@set _MSNUM=0
+@set VS_BAT=
+@set GENERATOR=
+@call %TMP_MSVC%
+@if "%GENERATOR%x" == "x" (
+@set /A HAD_ERROR+=1
+@set /A error+=1
+@echo.
+@echo No GENERATOR set! %TMP_MSVC% FAILED! **FIX ME**
+@echo.
+@goto ISERR
+)
+@if "%VS_BAT%x" == "x" (
+@set /A HAD_ERROR+=1
+@set /A error+=1
+@echo.
+@echo No ENV VS_BAT SET_BAT set! %TMP_MSVC% FAILED! **FIX ME**
+@echo.
+@goto ISERR
+)
+
+@REM MSVC has been setup, do NOT call this a 2nd time
+@set VS_BAT=
+
 @set CGAL_DIR=libcgal-source
 
 REM ######################################################################################
-REM ######################################################################################
-REM ######################################################################################
-REM ######################################################################################
-REM ######################################################################################
-
 REM ############################## SEARCH PATHS ##########################################
 REM Search SVN.EXE path
 set SVN_EXE=svn
@@ -97,7 +115,6 @@ REM ######################### SET EXECUTABLES PATH #############################
 REM set "CURL_EXE=%GIT_PATH%\curl.exe"
 REM set "GIT_EXE=%GIT_PATH%\git.exe"
 REM set "UNZIP_EXE=%GIT_PATH%\unzip.exe"
-REM set "VC_BAT=%VS_PATH%\VC\vcvarsall.bat"
 set CURL_EXE=wget
 set CURL_OPTS=-O
 set UNZIP_EXE=C:\MDOS\temp\unix\unzip.exe
@@ -127,35 +144,32 @@ IF "%1"=="/?" GOTO Usage
 IF "%1"=="/help" GOTO Usage
 
 REM ######################### CHECK AVAILABLE TOOLS ######################################
-set "error=0"
-IF NOT exist "%VS_PATH%" (
-	echo.
-    echo ERROR ! "%VS_PATH%" doesn't exist
-    echo You must install a working MSVC2010 ^( Microsoft Visual Studio 2010 ^)
-	set "error=1"
-	echo.
+@REM external...
+@REM Switch MSVC Version
+@set _MSVS=0
+@set _MSNUM=0
+@set VS_BAT=
+@set GENERATOR=
+@call %TMP_MSVC%
+@if "%GENERATOR%x" == "x" (
+@set /A HAD_ERROR+=1
+@set /A error+=1
+@echo.
+@echo No GENERATOR set! %TMP_MSVC% FAILED! **FIX ME**
+@echo.
+@goto EXIT
 )
-IF NOT exist "%VC_BAT%" (
-	echo.
-    echo ERROR ! "%VC_BAT%" doesn't exist
-    echo You must install a working MSVC2010 ^( Microsoft Visual Studio 2010 ^)
-	set "error=1"
-	echo.
+@if "%VS_BAT%x" == "x" (
+@set /A HAD_ERROR+=1
+@set /A error+=1
+@echo.
+@echo No ENV VS_BAT SET_BAT set! %TMP_MSVC% FAILED! **FIX ME**
+@echo.
+@goto EXIT
 )
-IF "%CMAKE_EXE%x" == "x" (
-	echo.
-    echo ERROR ! "CMAKE.EXE can't be found in PATH or registry"
-    echo You must install it ^( http://www.cmake.org/cmake/resources/software.html#latest ^)
-	set "error=1"
-	echo.
-)
-REM IF NOT exist "%CMAKE_EXE%" (
-REM	echo.
-REM    echo ERROR ! "%CMAKE_EXE%" doesn't exist
-REM    echo You must install it ^( http://www.cmake.org/cmake/resources/software.html#latest ^)
-REM	set "error=1"
-REM	echo.
-REM )
+
+@REM MSVC has been setup, do NOT call this a 2nd time
+@set VS_BAT=
 
 IF "%CGAL_PATH%"=="" (
 echo.
@@ -948,13 +962,27 @@ echo #########         D  #########
 :the_end
 exit /b 0
 
+@REM ########### ERROR EXISTS ##########
 :NO3RD
+@set /A HAD_ERROR+=1
 @echo.
 @echo Can NOT locate file %TMPDN3RD%!
 @echo You need to run make3rd.x64.bat first to setup and populate the 3rdParty directory
 @echo.
+@goto ISERR
+
+:NO_MSVC_SEL
+@set /A HAD_ERROR+=1
+@echo.
+@echo Error: Can NOT locate %TMP_MSVC% to setup MSVC environment
+@goto ISERR
+
+:ISERR
+@endlocal
 @exit /b 1
 
+@REM ###########################################################################
+@REM give help...
 :Usage
 echo Usage: 
 echo    $0 [ [/P] [/M] [/C] [/D] [3rdparty] [boost] [osg] [simgear] [flightgear] [fgrun] [fgdata] [terragear] [terrageargui] ]
