@@ -29,7 +29,6 @@ set  error=0
 @set BLDLOG= ^>^> %LOGFIL% 2^>^&1
 @set HAVELOG=1
 @set TMPDN3RD=make3rd.x64.txt
-@set MSC_VERS=msvc100
 
 @if NOT EXIST %TMPDN3RD% goto NO3RD
 
@@ -44,6 +43,7 @@ set  error=0
 @set _MSNUM=0
 @set VS_BAT=
 @set GENERATOR=
+@set MSC_VERS=
 @call %TMP_MSVC%
 @if "%GENERATOR%x" == "x" (
 @set /A HAD_ERROR+=1
@@ -58,6 +58,14 @@ set  error=0
 @set /A error+=1
 @echo.
 @echo No ENV VS_BAT SET_BAT set! %TMP_MSVC% FAILED! **FIX ME**
+@echo.
+@goto ISERR
+)
+@if "%MSC_VERS%x" == "x" (
+@set /A HAD_ERROR+=1
+@set /A error+=1
+@echo.
+@echo No ENV MSC_VER set! Expect 'msvc100', ... %TMP_MSVC% FAILED! **FIX ME**
 @echo.
 @goto ISERR
 )
@@ -143,33 +151,6 @@ IF "%1"=="/h" GOTO Usage
 IF "%1"=="/?" GOTO Usage
 IF "%1"=="/help" GOTO Usage
 
-REM ######################### CHECK AVAILABLE TOOLS ######################################
-@REM external...
-@REM Switch MSVC Version
-@set _MSVS=0
-@set _MSNUM=0
-@set VS_BAT=
-@set GENERATOR=
-@call %TMP_MSVC%
-@if "%GENERATOR%x" == "x" (
-@set /A HAD_ERROR+=1
-@set /A error+=1
-@echo.
-@echo No GENERATOR set! %TMP_MSVC% FAILED! **FIX ME**
-@echo.
-@goto EXIT
-)
-@if "%VS_BAT%x" == "x" (
-@set /A HAD_ERROR+=1
-@set /A error+=1
-@echo.
-@echo No ENV VS_BAT SET_BAT set! %TMP_MSVC% FAILED! **FIX ME**
-@echo.
-@goto EXIT
-)
-
-@REM MSVC has been setup, do NOT call this a 2nd time
-@set VS_BAT=
 
 IF "%CGAL_PATH%"=="" (
 echo.
@@ -232,33 +213,15 @@ IF %error% EQU 1 (
 	exit /b 1
 )
 
+@REM /O option uses REPO2
 @set _TMP_OSG_REPO=http://flightgear.simpits.org:8080/view/Windows/job/OSG-Win/lastSuccessfulBuild/artifact/*zip*/archive.zip
+@set _TMP_OSG_REPO2=https://github.com/openscenegraph/OpenSceneGraph.git
 @REM altern set _TMP_OSG_REPO=http://flightgear.simpits.org:8080/view/Windows/job/OSG-Win/lastSuccessfulBuild/artifact/install/*zip*/install.zip
 @REM set _TMP_OSG_REPO=http://flightgear.simpits.org:8080/view/Win/job/OSG-stable-Win64/lastSuccessfulBuild/artifact/install/%MSC_VERS%-64/OpenSceneGraph/*zip*/OpenSceneGraph.zip"
 @set "OSG_REPO=%_TMP_OSG_REPO%"
 @set OSG_DIR=%MSC_VERS%-64
-REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
-IF /i %BUILD_BITS% EQU x86_amd64 (
-    set "RDPARTY_ARCH=x64"
-    set "RDPARTY_DIR=3rdParty.x64"
-) ELSE (
-    IF /i %BUILD_BITS% EQU amd64 (
-        set "RDPARTY_ARCH=x64"
-        set "RDPARTY_DIR=3rdParty.x64"
-    ) ELSE (
-        set "RDPARTY_ARCH=win32"
-        set "RDPARTY_DIR=3rdParty"
-        set "OSG_REPO=%_TMP_OSG_REPO%"
-        @set OSG_DIR=%MSC_VERS%
-        @echo.
-        @echo BUILD neither x86_amd64 nor amd64. IE no 64-bit build!
-        @echo *** FIX ME *** if some other BUILD_BITS=%BUILD_BITS% is correct...
-        @echo and just comment out this exit
-        @exit /b 1
-    )
-)
-ECHO Setting environment - CALL "%VC_BAT%" %BUILD_BITS%
-CALL "%VC_BAT%" %BUILD_BITS%
+@set OSG_REPO2=%_TMP_OSG_REPO2%
+@set OSG_BRANCH=OpenSceneGraph-3.4
 
 REM ############################      SET PATHS      #####################################
 IF NOT exist install ( mkdir install )
@@ -289,6 +252,8 @@ set "PULL=1"
 set "CMAKE=1"
 set "COMPILE=1"
 set DEBUGBLD=0
+@REM OSG Install - 0 == simpits binaries - archive.zip - 1 == OSG Repo clone
+set OSGREPO=0
 
 REM ###################### DOWNLOAD FGDATA IN BACKGROUND #################################
 IF "%1"=="" (
@@ -328,6 +293,11 @@ IF %BUILD_ALL% EQU 0 (
 	)
 	IF "%1" == "/D" (
 		set DEBUGBLD=1
+		SHIFT
+		GOTO Parser
+	)
+	IF "%1" == "/O" (
+		set OSGREPO=1
 		SHIFT
 		GOTO Parser
 	)
@@ -431,11 +401,13 @@ IF %BUILD_ALL% EQU 0 (
 )
 
 :osg
-echo ##############################
-echo ###########  OSG  ############
-echo ##############################
+@echo ##############################
+@echo ###########  OSG  ############
+@echo ##############################
 
 cd %PWD%
+@if %OSGREPO% EQU 1 goto DO_OSG_REPO2
+@REM Use a binary install, from simpits archive.zip
 set "OSG_ZIP=osg.zip"
 IF NOT exist %OSG_ZIP% (
     echo Downloading %OSG_REPO%...
@@ -459,6 +431,7 @@ IF NOT exist %OSG_ZIP% (
 )
 
 @REM OSG Source and destination
+@REM Like - install\archive\install\msvc100-64\OpenSceneGraph
 @set _OSG_SRC=install\archive\install\%OSG_DIR%\OpenSceneGraph
 @REM "OSG_INSTALL_DIR=%INSTALL_DIR%\OpenSceneGraph"
 IF NOT exist "%OSG_INSTALL_DIR%" (
@@ -475,21 +448,75 @@ IF NOT exist "%OSG_INSTALL_DIR%" (
     @REM goto the_end
     @goto DN_OSG_ZIP
 :OSGERR1
-@echo.
-@echo Error: Unzip of OSG zip %OSG_ZIP% showed error!
-@echo Is this the right zip from Jenkins???
-@echo.
-@goto the_end
+    @echo.
+    @echo Error: Unzip of OSG zip %OSG_ZIP% showed error!
+    @echo Is this the right zip from Jenkins???
+    @echo.
+    @goto the_end
 :OSGERR2
-@echo.
-@echo Error: OSG zip %OSG_ZIP% did not create %CD%\install\archive\install\%OSG_DIR%!
-@echo Is this the right zip from Jenkins???
-@echo.
-@goto the_end
-
+    @echo.
+    @echo Error: OSG zip %OSG_ZIP% did not create %CD%\install\archive\install\%OSG_DIR%!
+    @echo Is this the right zip from Jenkins???
+    @echo.
+    @goto the_end
 ) else (
     @ECHO Found "%OSG_INSTALL_DIR%"
 )
+@goto DN_OSG_ZIP
+
+:DO_OSG_REPO2
+@REM Handle OSG through a repo clone and build
+@set OSG_REPO=%OSG_REPO2%
+@IF exist "%PWD%"\OpenSceneGraph (
+    @REM No update needed for a release branch
+    @REM CALL :_gitUpdate OpenSceneGraph
+  	@echo Done: '@CALL %GIT_EXE% clone -b %OSG_BRANCH% --single-branch %OSG_REPO%' 
+    @echo Delete 'OpenSceneGraph' folder to do a fresh clone...
+) ELSE (
+    @echo Cloning "%OSG_REPO%"...
+	@REM CALL %GIT_EXE% clone -- %OSG_REPO% - what is this '--'???
+	@echo Doing: '@CALL %GIT_EXE% clone -b %OSG_BRANCH% --single-branch %OSG_REPO%' %BLDLOG%
+	@CALL %GIT_EXE% clone -b %OSG_BRANCH% --single-branch %OSG_REPO% %BLDLOG%
+	@REM CALL %GIT_EXE% checkout %OSG_BRANCH%
+)
+@cd %PWD%
+@if NOT exist build\nul (mkdir build)
+@cd build
+@IF NOT exist OpenSceneGraph (mkdir OpenSceneGraph)
+@cd OpenSceneGraph
+@echo In OSG build directory %CD%
+@set TMPOPTS=-G "%GENERATOR%" -DOSG_USE_QT:BOOL=OFF -DBUILD_OSG_APPLICATIONS:BOOL=ON ^
+-DOSG_PLUGIN_SEARCH_INSTALL_DIR_FOR_PLUGINS:BOOL=OFF ^
+-DCMAKE_LIBRARY_PATH:STRING="%RDPARTY_INSTALL_DIR%\lib" ^
+-DCMAKE_INCLUDE_PATH:STRING="%RDPARTY_INSTALL_DIR%\include";"%RDPARTY_INSTALL_DIR%\include\freetype" ^
+-DGDAL_LIBRARY:FILEPATH="%RDPARTY_INSTALL_DIR%\lib\gdal_i.lib" ^
+-DCMAKE_INSTALL_PREFIX:PATH="%OSG_INSTALL_DIR%"
+@IF %CMAKE% EQU 1 (
+    @IF %HAVELOG% EQU 1 (
+        @ECHO Doing: 'CALL "%CMAKE_EXE%" ..\..\OpenSceneGraph %TMPOPTS%' out to %LOGFIL%
+    ) else (
+        @ECHO Doing cmake configuration, generation for OSG...
+    )
+    @if EXIST CMakeCache.txt (
+        @REM @DEL CMakeCache.txt 2>nul
+    )
+	@CALL "%CMAKE_EXE%" ..\..\OpenSceneGraph %TMPOPTS% %BLDLOG%
+	@if ERRORLEVEL 1 (
+	    @ECHO cmake configuration, generation for OSG FAILED!
+        @goto ISERR
+	)
+	@echo Done cmake configuration, generation for OSG...
+)
+	
+@IF %HAVELOG% EQU 1 (
+    @ECHO Doing: 'CALL %CMAKE_EXE%" --build . --config Release --target INSTALL' output to %LOGFIL%
+)
+@CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL %BLDLOG%
+@if ERRORLEVEL 1 (
+    @ECHO Compile of OSG failed! See %LOGFIL%
+    @goto ISERR
+)
+
 :DN_OSG_ZIP
 
 cd "%PWD%"
@@ -985,12 +1012,13 @@ exit /b 0
 @REM give help...
 :Usage
 echo Usage: 
-echo    $0 [ [/P] [/M] [/C] [/D] [3rdparty] [boost] [osg] [simgear] [flightgear] [fgrun] [fgdata] [terragear] [terrageargui] ]
+echo    $0 [ [/P] [/M] [/C] [/D] [/O] [3rdparty] [boost] [osg] [simgear] [flightgear] [fgrun] [fgdata] [terragear] [terrageargui] ]
 echo    Options:
 echo       /C  : Do not compile
 echo       /M  : Do not run cmake
 echo       /P  : Do not run git pull
 echo       /D  : Also compile Debug configuration
+echo       /O  : Use OSG clone. Default uses Jenkin's simpits archive.zip
 echo.
 echo    Don't forget to edit the top of the script in accordance with your system
 exit /b 0
