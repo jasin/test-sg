@@ -16,6 +16,7 @@
 @REM Switch MSVC Version
 @set _MSVS=10
 @set _MSNUM=1600
+@set MSC_VERS=msvc100
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
 @set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
@@ -23,6 +24,7 @@
 @IF EXIST "%VS_PATH%" goto GOT_VS_PATH
 @set _MSVS=12
 @set _MSNUM=1800
+@set MSC_VERS=msvc120
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
 @REM set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
