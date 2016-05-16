@@ -35,13 +35,13 @@
 @REM ######################################################################################
 @REM ######################################################################################
 
-@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
+@REM set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
 @REM set "BUILD_BITS=amd64"
-@REM set "BUILD_BITS=x86_amd64"
+@set "BUILD_BITS=x86_amd64"
 @REM set "BUILD_BITS=x86"
-@set "GENERATOR=Visual Studio 10 Win64"
-@REM set "GENERATOR=Visual Studio 10"
-@set "VS_PATH=C:\Program Files (x86)\Microsoft Visual Studio 10.0"
+@set "GENERATOR=Visual Studio 12 Win64"
+@REM set "GENERATOR=Visual Studio 12"
+@set "VS_PATH=C:\Program Files (x86)\Microsoft Visual Studio 12.0"
 @set CGAL_DIR=libcgal-source
 
 REM ######################################################################################
@@ -100,12 +100,12 @@ REM set "UNZIP_EXE=%GIT_PATH%\unzip.exe"
 REM set "VC_BAT=%VS_PATH%\VC\vcvarsall.bat"
 set CURL_EXE=wget
 set CURL_OPTS=-O
-set UNZIP_EXE=C:\MDOS\temp\unix\unzip.exe
+set UNZIP_EXE=unzip.exe
 set "VC_BAT=%VS_PATH%\VC\vcvarsall.bat"
 
 REM #########################     SET REPO PATH     ######################################
-set "BOOST_REPO=http://svn.boost.org/svn/boost/tags/release/Boost_1_55_0"
-set "CGAL_REPO=https://gforge.inria.fr/frs/download.php/32358/CGAL-4.2.zip"
+@REM set "BOOST_REPO=http://svn.boost.org/svn/boost/tags/release/Boost_1_55_0"
+@REM set "CGAL_REPO=https://gforge.inria.fr/frs/download.php/32358/CGAL-4.2.zip"
 set "RDPARTY_REPO=http://fgfs.goneabitbursar.com/fgwin3rdparty/trunk/%MSC_VERS%"
 set "FG_REPO=git://git.code.sf.net/p/flightgear/flightgear"
 set "TG_REPO=git://git.code.sf.net/p/flightgear/terragear"
@@ -218,10 +218,16 @@ IF %error% EQU 1 (
 	exit /b 1
 )
 
-@set _TMP_OSG_REPO=http://flightgear.simpits.org:8080/view/Windows/job/OSG-Win/lastSuccessfulBuild/artifact/*zip*/archive.zip
+@set _TMP_OSG_ZIP=http://flightgear.simpits.org:8080/view/Windows/job/OSG-Win/lastSuccessfulBuild/artifact/*zip*/archive.zip
+@set _TMP_OSG_REPO=https://github.com/openscenegraph/OpenSceneGraph.git
 @REM altern set _TMP_OSG_REPO=http://flightgear.simpits.org:8080/view/Windows/job/OSG-Win/lastSuccessfulBuild/artifact/install/*zip*/install.zip
 @REM set _TMP_OSG_REPO=http://flightgear.simpits.org:8080/view/Win/job/OSG-stable-Win64/lastSuccessfulBuild/artifact/install/%MSC_VERS%-64/OpenSceneGraph/*zip*/OpenSceneGraph.zip"
-@set "OSG_REPO=%_TMP_OSG_REPO%"
+@if %BUILDOSG%=1 (
+    @set "OSG_REPO=%_TMP_OSG_REPO%"
+    @set OSG_BRANCH=OpenSceneGraph-3.4
+) else (
+    @set "OSG_REPO=%_TMP_OSG_ZIP%"
+)
 @set OSG_DIR=%MSC_VERS%-64
 REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
 IF /i %BUILD_BITS% EQU x86_amd64 (
@@ -251,7 +257,7 @@ IF NOT exist install ( mkdir install )
 IF NOT exist build ( mkdir build )
 set "OSG_INSTALL_DIR=%INSTALL_DIR%\OpenSceneGraph"
 @REM 20160509 - Include Boost in make3rd.x64.bat
-set "BOOST_INSTALL_DIR=%PWD%\Boost"
+set "BOOST_INSTALL_DIR=%BOOST_ROOT%"
 @REM This does a complete clone, and build of boost
 @REM set "BOOST_INSTALL_DIR=%INSTALL_DIR%\Boost"
 set "RDPARTY_INSTALL_DIR=%PWD%\%RDPARTY_DIR%"
@@ -317,6 +323,11 @@ IF %BUILD_ALL% EQU 0 (
 		SHIFT
 		GOTO Parser
 	)
+    IF "%1" == "/O" (
+        set BUILDOSG=1
+        SHIFT
+        GOTO Parser
+    )
     ECHO goto %1
 	GOTO %1
     @if ERRORLEVEL 1 (
@@ -422,28 +433,76 @@ echo ###########  OSG  ############
 echo ##############################
 
 cd %PWD%
-set "OSG_ZIP=osg.zip"
-IF NOT exist %OSG_ZIP% (
-    echo Downloading %OSG_REPO%...
-    CALL "%CURL_EXE%" %CURL_OPTS% %OSG_ZIP% %OSG_REPO%
-    @if ERRORLEVEL 1 goto NOOSG1
+@if %BUILDOSG% == 1 (
+	IF exist "%PWD%"\OpenSceneGraph (
+	    CALL :_gitUpdate OpenSceneGraph
+	) ELSE (
+	    echo Cloning "%OSG_REPO%"...
+	    CALL %GIT_EXE% clone -- %OSG_REPO% - what is this '--'???
+	    echo Doing: CALL %GIT_EXE% clone %OSG_REPO% %OSG_BRANCH%
+	    CALL %GIT_EXE% clone -b %OSG_BRANCH% --single-branch %OSG_REPO%
+	    @REM CALL %GIT_EXE% checkout %OSG_BRANCH%
+	)
+	cd "%PWD%"\build
+	IF NOT exist OpenSceneGraph (mkdir OpenSceneGraph)
+	   cd OpenSceneGraph
+	   @REM    -DCMAKE_BUILD_TYPE="Release"
+	   @echo In OSG build directory %CD%
+       @set TMPOPTS=-G "%GENERATOR%" -DOSG_USE_QT:BOOL=OFF -DBUILD_OSG_APPLICATIONS:BOOL=ON ^
+-DOSG_PLUGIN_SEARCH_INSTALL_DIR_FOR_PLUGINS:BOOL=OFF ^
+-DCMAKE_LIBRARY_PATH:STRING="%RDPARTY_INSTALL_DIR%\lib" ^
+-DCMAKE_INCLUDE_PATH:STRING="%RDPARTY_INSTALL_DIR%\include";"%RDPARTY_INSTALL_DIR%\include\freetype" ^
+-DGDAL_LIBRARY:FILEPATH="%RDPARTY_INSTALL_DIR%\lib\gdal_i.lib" ^
+-DCMAKE_INSTALL_PREFIX:PATH="%OSG_INSTALL_DIR%"
+
+	@IF %CMAKE% EQU 1 (
+	    @IF %HAVELOG% EQU 1 (
+	        @ECHO Doing: 'CALL "%CMAKE_EXE%" ..\..\OpenSceneGraph %TMPOPTS%' out to %LOGFIL%
+	    ) else (
+	        @ECHO Doing cmake configuration, generation for OSG...
+	    )
+		DEL CMakeCache.txt 2>nul
+		CALL "%CMAKE_EXE%" ..\..\OpenSceneGraph %TMPOPTS% %BLDLOG%
+	    @if ERRORLEVEL 1 (
+	        @ECHO cmake configuration, generation for OSG FAILED!
+	        @exit /b 1
+	    )
+	    @echo Done cmake configuration, generation for OSG...
+	)
+	
+	@IF %HAVELOG% EQU 1 (
+	    @ECHO Doing: 'CALL %CMAKE_EXE%" --build . --config Release --target INSTALL' output to %LOGFIL%
+	)
+	    CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL %BLDLOG%
+	    @IF %HAVELOG% EQU 1 (
+	        if ERRORLEVEL 1 (
+	            @ECHO Compile of OSG failed! See %LOGFIL%
+	        )
+	    )
+
 ) else (
-    echo Found %OSG_ZIP%
+	set "OSG_ZIP=osg.zip"
+	IF NOT exist %OSG_ZIP% (
+	    echo Downloading %OSG_REPO%...
+	    CALL "%CURL_EXE%" %CURL_OPTS% %OSG_ZIP% %OSG_REPO%
+	    @if ERRORLEVEL 1 goto NOOSG1
+	) else (
+	    echo Found %OSG_ZIP%
+	)
+	@goto GOT_OSG_ZIP
+	:NOOSG1
+	@if EXIST %OSG_ZIP% @del %OSG_ZIP%
+	@echo.
+	@echo CMD FAILED: 'CALL "%CURL_EXE%" %CURL_OPTS% %OSG_ZIP% %OSG_REPO%'
+	@echo ERROR: %OSG_ZIP% is missing: download FAILED
+	@goto the_end
+	:GOT_OSG_ZIP
+	
+	IF NOT exist %OSG_ZIP% (
+	    echo ERROR: %OSG_ZIP% is missing: download failed
+	    GOTO the_end
+	)
 )
-@goto GOT_OSG_ZIP
-:NOOSG1
-@if EXIST %OSG_ZIP% @del %OSG_ZIP%
-@echo.
-@echo CMD FAILED: 'CALL "%CURL_EXE%" %CURL_OPTS% %OSG_ZIP% %OSG_REPO%'
-@echo ERROR: %OSG_ZIP% is missing: download FAILED
-@goto the_end
-:GOT_OSG_ZIP
-
-IF NOT exist %OSG_ZIP% (
-    echo ERROR: %OSG_ZIP% is missing: download failed
-    GOTO the_end
-)
-
 @REM OSG Source and destination
 @set _OSG_SRC=install\archive\install\%OSG_DIR%\OpenSceneGraph
 @REM "OSG_INSTALL_DIR=%INSTALL_DIR%\OpenSceneGraph"
