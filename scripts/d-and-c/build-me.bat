@@ -1,3 +1,1 @@
-call d-and-c %* simgear flightgear
-
-
+call d-and-c.x64 %* simgear flightgear
