@@ -36,7 +36,7 @@
 @IF NOT exist "%VS_BAT%" goto NO_VS_BAT
 @REM ######################### CHECK AVAILABLE TOOLS ######################################
 
-@echo Set ARCHITEXTURE, based on PROCESSOR_ARCHITECTURE=%BUILD_BITS%
+@echo Set ARCHITECTURE, based on PROCESSOR_ARCHITECTURE=%BUILD_BITS%
 @REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
 @IF /i %BUILD_BITS% EQU x86_amd64 (
     @set "RDPARTY_ARCH=x64"
@@ -112,7 +112,7 @@
 @set TMPERR=1
 @goto END
 
-:NAMKE_FAILED
+:NMAKE_FAILED
 @echo.
 @echo Oops NMAKE /? FAILED!
 @set TMPERR=1
