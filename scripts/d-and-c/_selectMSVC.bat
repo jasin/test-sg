@@ -36,17 +36,19 @@
 @IF NOT exist "%VS_BAT%" goto NO_VS_BAT
 @REM ######################### CHECK AVAILABLE TOOLS ######################################
 
-@echo Set ARCHITEXTURE, based on PROCESSOR_ARCHITECTURE=%BUILD_BITS%
+@echo Set ARCHITECTURE, based on PROCESSOR_ARCHITECTURE=%BUILD_BITS%
 @REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
-@IF /i %BUILD_BITS% EQU x86_amd64 (
+@IF exist "%VS_PATH%\VC\bin\%BUILD_BITS%" (
     @set "RDPARTY_ARCH=x64"
     @set "RDPARTY_DIR=3rdParty.x64"
-    @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvarsx86_amd64.bat"
+    @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars%BUILD_BITS%.bat"
+    @set "COMPILER=%BUILD_BITS%"
 ) ELSE (
-    @IF /i %BUILD_BITS% EQU amd64 (
+    @IF exist "%VS_PATH%\VC\bin\x86_%BUILD_BITS%" ( 
         @set "RDPARTY_ARCH=x64"
         @set "RDPARTY_DIR=3rdParty.x64"
-        @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars64.bat"
+        @set "MSVCBIN=%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_%BUILD_BITS%.bat"
+        @set "COMPILER=x86_%BUILD_BITS%"
     ) ELSE (
         @set "RDPARTY_ARCH=win32"
         @set "RDPARTY_DIR=3rdParty"
@@ -64,11 +66,6 @@
 @echo 1: Checking for "%MSVCBIN%" ...
 @if EXIST "%MSVCBIN%" goto GOT_BIN
 @echo Warning: Can NOT locate "%MSVCBIN%
-@set BUILD_BITS=x86_amd64
-@set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars%BUILD_BITS%.bat"
-
-@echo 2: Checking for "%MSVCBIN%" ...
-@if EXIST "%MSVCBIN%" goto GOT_BIN
 @REM oops found nothing... what to do???
 @echo.
 @echo Can NOT locate neither x86_amd64 nor amd64. Maybe no 64-bit build!
@@ -79,8 +76,8 @@
 
 :GOT_BIN
 
-@echo Will: CALL "%VS_BAT%" %BUILD_BITS%
-@call "%VS_BAT%" %BUILD_BITS%
+@echo Will: CALL "%VS_BAT%" %COMPILER%
+@call "%VS_BAT%" %COMPILER%
 @if ERRORLEVEL 1 goto BAT_FAILED
 
 @echo Have set the MSVC%_MSVS% (%_MSNUM%) environment... Platform=%Platform%
