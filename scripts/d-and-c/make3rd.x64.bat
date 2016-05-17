@@ -357,7 +357,7 @@ IF %HAVELOG% EQU 1 (
 @echo 	      $line = $lines[$i]; >>%PERL_FIL%
 @echo         $line =~ s/Win32/x64/g; >>%PERL_FIL%
 @if %_MSVS% GTR 10 (
-@echo         $line =~ s/^<CharacterSet^>Unicode^<^/CharacterSet^>^/^<CharacterSet^>Unicode^<^/CharacterSet^>^\n^<PlatformToolset^>v%_MSVS%0^<^/PlatformToolset^>^/g; >>%PERL_FIL%
+@echo         $line =~ s/\^<CharacterSet\^>Unicode\^<\^/CharacterSet\^>^/\^<CharacterSet\^>Unicode\^<\^/CharacterSet\^>^\n\^<PlatformToolset\^>v%_MSVS%0\^<\^/PlatformToolset\^>^/g; >>%PERL_FIL%
 )
 @echo         $lines[$i] = $line; >>%PERL_FIL%
 @echo     } >>%PERL_FIL%
