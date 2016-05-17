@@ -1248,8 +1248,10 @@ xcopy %WORKSPACE%\plib-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
+@goto ISERR
 )
 @set _TMP_LIBS=%_TMP_LIBS% OpenAL
+)
 :DN_AL
 
 :END
