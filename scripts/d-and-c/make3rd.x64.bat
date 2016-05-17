@@ -25,6 +25,7 @@
 @goto EXIT
 )
 @set HAD_ERROR=0
+@set _TMP_LIBS=
 
 @REM Switch MSVC Version
 @set _MSVS=0
@@ -128,11 +129,11 @@ md %WORKSPACE%\%TMP3RD%\include
 @REM Already done... do not repeat... anyway should be VS_BAT BUILD_BITS
 @REM CALL %SET_BAT% amd64
 
-@REM TEST JUMP
+@REM TEST JUMP - REMOVE AFTER TESTING
 @REM GOTO DO_CGAL
 @REM GOTO DO_GDAL 
 @REM GOTO DO_BOOST
-@set _TMP_LIBS=
+@goto DO_JPEG
 
 :DO_ZLIB
 @set _TMP_LIBS=%_TMP_LIBS% ZLIB
@@ -355,6 +356,9 @@ IF %HAVELOG% EQU 1 (
 @echo     for ($i = 0; $i ^< $lncnt; $i++) { >>%PERL_FIL%
 @echo 	      $line = $lines[$i]; >>%PERL_FIL%
 @echo         $line =~ s/Win32/x64/g; >>%PERL_FIL%
+@if %_MSVS% GTR 10 (
+@echo         $line =~ s/^<CharacterSet^>Unicode^<^/CharacterSet^>^/^<CharacterSet^>Unicode^<^/CharacterSet^>^\n^<PlatformToolset^>v%_MSVS%0^<^/PlatformToolset^>^/g; >>%PERL_FIL%
+)
 @echo         $lines[$i] = $line; >>%PERL_FIL%
 @echo     } >>%PERL_FIL%
 @echo     if (open WOF, ">$file") { >>%PERL_FIL%
@@ -409,11 +413,12 @@ nmake -f makefile.vc setup-v10
 @REM sed -i "s/Win32/x64/g" jpeg.vcxproj
 perl -f %PERL_FIL% jpeg.sln
 perl -f %PERL_FIL% jpeg.vcxproj
-ECHO Doing 'msbuild jpeg.sln /t:Build /p:Configuration=Release;Platform=x64' %BLDLOG%
-IF %HAVELOG% EQU 1 (
-ECHO Doing 'msbuild jpeg.sln /t:Build /p:Configuration=Release;Platform=x64' to %LOGFIL%
+@set _TMP_BLD=jpeg.sln /t:Build /p:Configuration=Release;Platform=x64
+@if %_MSVS% GTR 10 (
+@set _TMP_BLD=jpeg.vcxproj /t:Build /p:Configuration=Release;Platform=x64
 )
-msbuild jpeg.sln /t:Build /p:Configuration=Release;Platform=x64 %BLDLOG%
+@echo Doing 'msbuild %_TMP_BLD%' to %LOGFIL%
+msbuild %_TMP_BLD% %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit msbuild source %TMP_SRC%
@@ -429,6 +434,8 @@ xcopy %WORKSPACE%\libjpeg-source\jpeglib.h %WORKSPACE%\%TMP3RD%\include /y /s /q
 
 :DN_JPEG
 cd %WORKSPACE%
+@REM TEST EXIT - REMOVE AFTER TESTING
+@goto EXIT
 
 :DO_CURL
 @set _TMP_LIBS=%_TMP_LIBS% CURL
