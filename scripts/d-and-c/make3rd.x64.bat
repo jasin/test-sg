@@ -132,6 +132,8 @@ md %WORKSPACE%\%TMP3RD%\include
 @REM GOTO DO_CGAL
 @REM GOTO DO_GDAL 
 @REM GOTO DO_BOOST
+@REM GOTO DO_JPEG
+@REM GOTO DO_AL
 @set _TMP_LIBS=
 
 :DO_ZLIB
@@ -656,7 +658,9 @@ cd %WORKSPACE%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBBOOST to %LOGFIL%
 )
-
+@REM check to see if we have a boost installation we can use. Checking %BOOST_ROOT%
+@echo Checking for local installation of boost...
+@if NOT "%BOOST_ROOT%"=="" GOTO DN_BOOST 
 @REM But must have something of boost, even at this early stage
 @echo But must have something of boost, even at this early stage... UGH!
 @REM GOTO DO_BOOST2
@@ -727,7 +731,7 @@ CD %TMP_SRC%
 @REM )
 
 :DN_BOOST 
-
+@echo %BOOST_ROOT%
 cd %WORKSPACE%
 
 :DO_CGAL
@@ -1250,6 +1254,7 @@ xcopy %WORKSPACE%\plib-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 @set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
 )
 @set _TMP_LIBS=%_TMP_LIBS% OpenAL
+)
 :DN_AL
 
 :END

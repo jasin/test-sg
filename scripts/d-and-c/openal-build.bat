@@ -17,7 +17,7 @@
 @set BLDDBG=1
 @set TMPROOT=..
 
-@set SET_BAT=%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat
+@set SET_BAT=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0\VC\vcvarsall.bat
 @if NOT EXIST "%SET_BAT%" goto NOBAT
 @if NOT EXIST %TMPROOT%\nul goto NOROOT
 @REM set TMPSRC=..\openal-source
@@ -26,21 +26,17 @@
 @if /I "%PROCESSOR_ARCHITECTURE%" EQU "AMD64" (
 @set TMPINST=%TMPROOT%\3rdParty.x64
 ) ELSE (
- @if /I "%PROCESSOR_ARCHITECTURE%" EQU "x86_64" (
-@set TMPINST=%TMPROOT%\3rdParty.x64
- ) ELSE (
 @echo ERROR: Appears 64-bit is NOT available... aborting...
 @goto ISERR
- )
 )
 @if NOT EXIST %TMPINST%\nul goto NOINST
 
 @echo Doing build output to %TMPLOG%
 @echo Doing build output to %TMPLOG% > %TMPLOG%
 
-@echo Doing: 'call "%SET_BAT%" %PROCESSOR_ARCHITECTURE%'
-@echo Doing: 'call "%SET_BAT%" %PROCESSOR_ARCHITECTURE%' >> %TMPLOG%
-@call "%SET_BAT%" %PROCESSOR_ARCHITECTURE% >> %TMPLOG% 2>&1
+@echo Doing: 'call "%SET_BAT%" %BUILD_BITS%
+@echo Doing: 'call "%SET_BAT%" %BUILD_BITS%' >> %TMPLOG%
+@call "%SET_BAT%" %BUILD_BITS% >> %TMPLOG% 2>&1
 @if ERRORLEVEL 1 goto ERR0
 @REM call setupqt64
 @cd %BLDDIR%
@@ -57,7 +53,7 @@
 @REM ##########################################
 @REM set TMPINST=F:\Projects\software.x64
 @set TMPOPTS=-DCMAKE_INSTALL_PREFIX=%TMPINST%
-@set TMPOPTS=%TMPOPTS% -G "Visual Studio 10 Win64"
+@set TMPOPTS=%TMPOPTS% -G "Visual Studio %_MSVS% Win64"
 
 :RPT
 @if "%~1x" == "x" goto GOTCMD
