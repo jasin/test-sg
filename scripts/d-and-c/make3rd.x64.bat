@@ -133,7 +133,7 @@ md %WORKSPACE%\%TMP3RD%\include
 @REM GOTO DO_CGAL
 @REM GOTO DO_GDAL 
 @REM GOTO DO_BOOST
-@goto DO_JPEG
+@REM goto DO_JPEG
 
 :DO_ZLIB
 @set _TMP_LIBS=%_TMP_LIBS% ZLIB
@@ -435,7 +435,7 @@ xcopy %WORKSPACE%\libjpeg-source\jpeglib.h %WORKSPACE%\%TMP3RD%\include /y /s /q
 :DN_JPEG
 cd %WORKSPACE%
 @REM TEST EXIT - REMOVE AFTER TESTING
-@goto EXIT
+@REM goto EXIT
 
 :DO_CURL
 @set _TMP_LIBS=%_TMP_LIBS% CURL
