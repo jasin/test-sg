@@ -10,10 +10,39 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 project( test-sg )
 
 # The version number.
-set( test_sg_MAJOR 3 )
-set( test_sg_MINOR 0 )
-set( test_sg_POINT 0 )
+# ### NOTE: *** Adjust version.txt when required ***
+# read 'version' file into a variable (stripping any newlines or spaces)
+# NOTE: Both version and date MUST be DOT separated, in two lines.
+file(READ version.txt versionFile)
+if (NOT versionFile)
+    message(FATAL_ERROR "Unable to determine project version. version.txt file is missing.")
+endif()
+string(STRIP "${versionFile}" VERSION_TEXT)
+string(REGEX REPLACE "(.*)[\r\n|\n](.*)" "\\1" TEST_SG_VERSION ${VERSION_TEXT})
+string(REGEX REPLACE "(.*)[\r\n|\n](.*)" "\\2" TEST_SG_DATE ${VERSION_TEXT})
+# establish version number
+if (TEST_SG_VERSION)
+    string(REPLACE "." ";" VERSION_LIST ${TEST_SG_VERSION})
+    list(GET VERSION_LIST 0 TEST_MAJOR_VERSION)
+    list(GET VERSION_LIST 1 TEST_MINOR_VERSION)
+    list(GET VERSION_LIST 2 TEST_POINT_VERSION)
+else ()
+    message(FATAL_ERROR "*** FAILED to get a VERSION from version.txt!")
+endif ()    
+# establish version date
+if (TEST_SG_DATE)
+    string(REPLACE "." ";" DATE_LIST ${TEST_SG_DATE})
+    list(GET DATE_LIST 0 test_YEAR)
+    list(GET DATE_LIST 1 test_MONTH)
+    list(GET DATE_LIST 2 test_DAY)
+else ()
+    message(FATAL_ERROR "*** FAILED to get a DATE from version.txt!")
+endif ()
 
+set( TEST_VERSION "${TEST_MAJOR_VERSION}.${TEST_MINOR_VERSION}.${TEST_POINT_VERSION}" )
+set( TEST_DATE "$(test_YEAR}.${test_MONTH}.${test_DAY}" )
+
+message(STATUS "*** Building version ${TEST_VERSION}, date ${TEST_DATE}")
 
 # Allow developer to select is Dynamic or static library built
 set( LIB_TYPE STATIC )  # set default static
