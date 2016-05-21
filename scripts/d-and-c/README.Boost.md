@@ -8,8 +8,23 @@ How to setup Boost to use with download-and-compile?
  2. Clone from the boost.org repository
  3. Use an already installed Boost
  4. Some other way?
- 
+
 Boost is quite a large package. It does not need to be updated that often.
+
+#### Progress
+
+20160521: 
+
+After getting the method 2. to work, I found, with MSVC10, that CGAL now has an unresolved external, so it seems for that version need to use the simpits binary download...
+
+In the process of making this choice `switchable`... maybe it is just good enough to have -
+
+````
+@if %_MSVS% GTR 10 goto DO_BOOST_BUILD
+:DO_BOOST_SP
+````
+
+BUT, still to be done is to likewise switch make3rd.x64 - **STILL TO BE DONE**
 
 #### 1. Use Jenkin's simpits archive zip download
 
@@ -19,13 +34,13 @@ It expands to 10,074 Files,  2,033,539,285 bytes, 2,555 Dirs. It contains all th
 
 Now while these static libraries remain compatible with later versions of MSVC, this is an easy install into the 'Boost' folder.
 
-THe last build of this was # 18 Feb 20, 2015 3:03 PM
+The last simpits build of this was # 18 Feb 20, 2015 3:03 PM
 
 #### 2. Clone from the boost.org repository
 
 Originally, this capability was only in d-and-c, and later moved to make3rd...
 
-Maybe there should be a separate _setupBoost.x64.bat
+Now moved to a build-boost.x64.bat, to be called from _setupBoost.x64.bat, ... see #13
 
 The 'boost' branch begins to explore this... please check it out, and give it a try - the simple test procedure is -
 
