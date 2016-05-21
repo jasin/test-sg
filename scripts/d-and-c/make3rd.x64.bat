@@ -3,6 +3,7 @@
 @REM Build 3rdParty components prior to building flightgear
 @REM ================================================================================
 @REM ################################################################################
+@REM 20160521 - v1.0.6 - Use external _setupBoost.x64.bat, which uses build-boost.x64.bat 
 @REM 20160513 - v1.0.5 - Use external _selectMSVC.x64 to set some variables for us
 @REM 20160511 - v1.0.4 - Add PLIB build, and install, through special PLIB-1.8.5.zip with a CMakeLists.txt
 @REM 20160510 - v1.0.3 - Add OpenAL build, and install, through openal-build.bat
@@ -25,6 +26,7 @@
 @goto EXIT
 )
 @set HAD_ERROR=0
+@set HAD_WARN=0
 @set _TMP_LIBS=
 
 @REM Switch MSVC Version
@@ -658,83 +660,23 @@ xcopy %WORKSPACE%\libfltk-build\build\lib\fltk*.lib %WORKSPACE%\%TMP3RD%\lib /y 
 cd %WORKSPACE%
 
 :DO_BOOST
-@set _TMP_LIBS=%_TMP_LIBS% BOOST
+@if NOT EXIST _setupBoost.x64.bat goto NOBOOST
+
 @echo %0: ############################# Download ^& compile LIBBOOST %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBBOOST to %LOGFIL%
 )
 
-@REM But must have something of boost, even at this early stage
-@echo But must have something of boost, even at this early stage... UGH!
-@REM GOTO DO_BOOST2
-
-@REM ECHO However this is ONLY obtaining the simpits boost and binaries %BLDLOG%
-@REM ECHO while download_and_compile obtains the SVN source and does a compile %BLDLOG%
-@REM ECHO So this is presently SKIPPED %BLDLOG%
-@REM GOTO DN_BOOST
-@REM :DO_BOOST2
-
-@REM set TMP_URL=http://flightgear.simpits.org:8080/job/Boost-Win64/lastSuccessfulBuild/artifact/*zip*/archive.zip
-@REM set TMP_URL=http://flightgear.simpits.org:8080/job/Boost-Win64/lastSuccessfulBuild/artifact/*zip*/Boost.zip
-@REM 20160509 - Update Jenkins Boot-win artifacts...
-@set TMP_URL=http://flightgear.simpits.org:8080/view/Windows/job/Boost-Win/lastSuccessfulBuild/artifact/*zip*/archive.zip
-@set TMP_ZIP=libboost.zip
-@set TMP_SRC=Boost
-
-@echo Check fo existance of %TMP_ZIP%
-
-@if NOT EXIST %TMP_ZIP% (
-@echo Doing 'CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%'
-CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%
-@if ERRORLEVEL 1 goto NOBOOST
-) else (
-@echo Found simpits boost %TMP_ZIP%
+@call _setupBoost.x64 %BLDLOG%
+@if ERRORLEVEL 1 goto NOBOOST2
+@if "%Boost_DIR%x" == "x" goto NOBOOST3
+@echo Establisted ENV Boost_DIR=%Boost_DIR% %BLDLOG%
+IF %HAVELOG% EQU 1 (
+@echo Establisted ENV Boost_DIR=%Boost_DIR%
 )
 
-@if NOT EXIST %TMP_ZIP% (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Download from %TMP_URL% to %TMP_ZIP% FAILED! >> %ERRLOG%
-@echo %HAD_ERROR%: Download from %TMP_URL% to %TMP_ZIP% FAILED!
-@GOTO NOBOOST
-@REM goto DN_BOOST
-)
-
-@if NOT EXIST Boost\nul (
-@if NOT EXIST archive\Boost\nul (
-@echo Doing: 'CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%'
-CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
-)
-CALL :SLEEP1
-MOVE archive\Boost .
-RMDIR archive
-)
-
-@if NOT EXIST %TMP_SRC%\nul (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Failed to set up %TMP_SRC%!
-@echo %HAD_ERROR%: Failed to set up %TMP_SRC%! >> %ERRLOG%
-@GOTO NOBOOST
-@REM goto DN_BOOST
-)
-
-CD %TMP_SRC%
-
-@if NOT EXIST lib\nul (
-@if EXIST lib64\nul (
-@REN lib64 lib
-)
-)
-
-@REM if NOT EXIST include\boost-1_55\nul (
-@REM MD include\boost-1_55
-@REM )
-
-@REM @if EXIST boost (
-@REM MOVE boost include\boost-1_55
-@REM )
-
+@set _TMP_LIBS=%_TMP_LIBS% BOOST
 :DN_BOOST 
-
 cd %WORKSPACE%
 
 :DO_CGAL
@@ -1003,7 +945,6 @@ xcopy %WORKSPACE%\libproj-source\src\proj_api.h %WORKSPACE%\%TMP3RD%\include /s 
 cd %WORKSPACE%
  
 :DO_GEOS 
-@set _TMP_LIBS=%_TMP_LIBS% GEOS
 @call :SET_BOOST
   
 @echo %0: ############################# Download ^& compile LIBGEOS %BLDLOG%
@@ -1025,7 +966,7 @@ CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
 )
 
 @if NOT EXIST %TMP_ZIP% (
-@set /A HAD_ERROR+=1 
+@set /A HAD_WARN+=1 
 @echo %HAD_ERROR%: Failed download from %TMP_URL% to %TMP_ZIP%
 @echo %HAD_ERROR%: Failed download from %TMP_URL% to %TMP_ZIP% >> %ERRLOG%
 @goto DN_GEOS
@@ -1041,7 +982,7 @@ REN %TMP_DIR% %TMP_SRC%
 )
 
 @if NOT EXIST %TMP_SRC%\nul (
-@set /A HAD_ERROR+=1
+@set /A HAD_WARN+=1
 @echo %HAD_ERROR%: Failed to set up %TMP_SRC%
 @echo %HAD_ERROR%: Failed to set up %TMP_SRC% >> %ERRLOG%
 @goto DN_GEOS
@@ -1059,9 +1000,10 @@ IF %HAVELOG% EQU 1 (
 )
 cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
-@set /A HAD_ERROR+=1
+@set /A HAD_WARN+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC% >> %ERRLOG%
+@goto DN_GEOS
 )
 
 @ECHO Doing: 'cmake --build . --config Release --target INSTALL' %BLDLOG%
@@ -1070,9 +1012,10 @@ IF %HAVELOG% EQU 1 (
 )
 cmake --build . --config Release --target INSTALL %BLDLOG%
 @if ERRORLEVEL 1 (
-@set /A HAD_ERROR+=1
+@set /A HAD_WARN+=1
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC%
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC% >> %ERRLOG%
+@goto DN_GEOS
 )
 
 cd %WORKSPACE%
@@ -1080,6 +1023,7 @@ cd %WORKSPACE%
 xcopy %WORKSPACE%\libgeos-build\build\bin\geos_c.dll %WORKSPACE%\%TMP3RD%\bin /s /y /q
 xcopy %WORKSPACE%\libgeos-build\build\lib\geos_c.lib %WORKSPACE%\%TMP3RD%\lib /s /y /q
 xcopy %WORKSPACE%\libgeos-build\build\include\geos_c.h %WORKSPACE%\%TMP3RD%\include /s /y /q
+@set _TMP_LIBS=%_TMP_LIBS% GEOS
 
 :DN_GEOS
 cd %WORKSPACE%
@@ -1285,8 +1229,20 @@ IF %HAVELOG% EQU 1 (
 :NOBOOST
 @set /A HAD_ERROR+=1
 @echo.
-@if EXIST %TMP_ZIP% @del %TMP_ZIP%
-@echo Did 'CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%' and got ERROR
+@echo Missing '_setupBoost.x64.bat' batch file to setup boost
+@echo.
+@goto ISERR
+:NOBOOST2
+@set /A HAD_ERROR+=1
+@echo.
+@echo batch '_setupBoost.x64.bat' FAILED to setup boost
+@echo.
+@goto ISERR
+:NOBOOST3
+@set /A HAD_ERROR+=1
+@echo.
+@echo batch '_setupBoost.x64.bat' FAILED to setup Boost_DIR in ENV
+@echo.
 @goto ISERR
 
 :NOCGALZIP
@@ -1358,7 +1314,7 @@ IF %HAVELOG% EQU 1 (
 @goto :EOF
 
 :SET_BOOST
-@set Boost_DIR=%WORKSPACE%\Boost
+@REM set Boost_DIR=%WORKSPACE%\Boost
 @echo Set ENV Boost_DIR=%Boost_DIR% %BLDLOG%
 @REM could also use BOOST_ROOT and BOOSTROOT to find Boost.
 @goto :EOF

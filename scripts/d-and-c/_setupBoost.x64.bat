@@ -49,8 +49,9 @@
 @if NOT exist Boost\nul goto NOBOOST
 @call build-boost.x64
 @if ERRORLEVEL 1 goto NOBLD
-
-echo Done Boost ...
+@endlocal
+@set Boost_DIR=%CD%\Boost
+echo Done Boost ... set ENV Boost_DIR=%Boost_DIR%
 @goto DN_BOOST
 
 :NOSEL
