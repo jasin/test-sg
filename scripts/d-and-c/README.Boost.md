@@ -23,9 +23,22 @@ THe last build of this was # 18 Feb 20, 2015 3:03 PM
 
 #### 2. Clone from the boost.org repository
 
-At present this capability is only in d-and-c. This should be moved to make3rd...
+Originally, this capability was only in d-and-c, and later moved to make3rd...
 
 Maybe there should be a separate _setupBoost.x64.bat
+
+The 'boost' branch begins to explore this... please check it out, and give it a try - the simple test procedure is -
+
+````
+$ cd test-sg\scripts\d-and-c
+$ md tempb
+$ cd tempb
+$ copy ..\*.bat .
+$ _setupBoost.x64
+$ # take a break
+````
+
+Report problems... thanks...
 
 #### 3. Use an already installed Boost
 
