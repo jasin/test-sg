@@ -1188,21 +1188,29 @@ xcopy %WORKSPACE%\plib-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 @REM xcopy %WORKSPACE%\plib-build\build\bin\zlib.dll %WORKSPACE%\%TMP3RD%\bin /y /q
 @echo Done PLIB...
 :DN_PLIB
-
+cd %WORKSPACE%
 @REM external builds
 :DO_AL
+@set _TMP_ALI=%WORKSPACE%\%TMP3RD%\include\AL\al.h
 @REM Avoid re-doing OpenAL if it already appears installed
-@if EXIST "%WORKSPACE%\%TMP3RD%\include\AL\al.h" goto DN_AL
-@if EXIST openal-build.bat (
-@echo Doing an OpenAL build and install...
-@call openal-build.bat
-@if ERRORLEVEL 1 (
-@set /A HAD_ERROR+=1
-@set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
-@goto ISERR
+@if EXIST %_TMP_ALI% goto GOT_AL
+@set _TMP_ALB=openal-build.x64.bat
+@if EXIST %_TMP_ALB% (
+    @echo Doing an OpenAL build and install...
+    @call %_TMP_ALB%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
+        @goto ISERR
+    )
+    @set _TMP_LIBS=%_TMP_LIBS% OpenAL
+) else (
+    @echo %_TMP_ALB% NOT FOUND in %CD%! ** FIX ME **
+    @goto ISERR
 )
-@set _TMP_LIBS=%_TMP_LIBS% OpenAL
-)
+@goto DN_AL
+:GOT_AL
+@echo Found %_TMP_ALI%... done AL
 :DN_AL
 
 :END
