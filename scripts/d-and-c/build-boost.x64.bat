@@ -133,11 +133,11 @@ call %TMPBS%
 :GOTBS
 
 @set B2OPTS=stage
-@set B2OPTS=%B2OPTS% --address-model=64
 @set B2OPTS=%B2OPTS% --build-type=complete
 @set B2OPTS=%B2OPTS% --build-dir=%TMPBLD%
 @set B2OPTS=%B2OPTS% toolset=msvc
 @set B2OPTS=%B2OPTS% link=static
+@set B2OPTS=%B2OPTS% address-model=64
 @REM Maybe NOT required for 'stage' build
 @REM set B2OPTS=%B2OPTS% --prefix="%TMPINST%"
 @REM limit the build to just 'system' and 'thread'
