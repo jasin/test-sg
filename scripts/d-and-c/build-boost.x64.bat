@@ -14,7 +14,7 @@
 @REM echo Is MSVC setup ok... any key to continue...
 @REM pause
 :DNSEL
-
+@goto DO_BOOST_BUILD
 :DO_BOOST_SP
 @echo %0: ##### Download ^& compile LIBBOOST %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -133,15 +133,15 @@ call %TMPBS%
 :GOTBS
 
 @set B2OPTS=stage
-@set B2OPTS=%B2OPTS% --toolset=msvc
 @set B2OPTS=%B2OPTS% --address-model=64
 @set B2OPTS=%B2OPTS% --build-type=complete
 @set B2OPTS=%B2OPTS% --build-dir=%TMPBLD%
-@REM set B2OPTS=%B2OPTS% --link=static
+@set B2OPTS=%B2OPTS% toolset=msvc
+@set B2OPTS=%B2OPTS% link=static
 @REM Maybe NOT required for 'stage' build
 @REM set B2OPTS=%B2OPTS% --prefix="%TMPINST%"
 @REM limit the build to just 'system' and 'thread'
-@REM set B2OPTS=%B2OPTS% --with-system --with-thread
+@set B2OPTS=%B2OPTS% --with-system --with-thread
 
 @set TMPOPTS=%B2OPTS%
 @if "%SHOW_LIBS%x" == "1x" (
