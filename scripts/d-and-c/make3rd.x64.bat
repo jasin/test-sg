@@ -675,9 +675,9 @@ IF %HAVELOG% EQU 1 (
 @call _setupBoost.x64 %BLDLOG%
 @if ERRORLEVEL 1 goto NOBOOST2
 @if "%Boost_DIR%x" == "x" goto NOBOOST3
-@echo Establisted ENV Boost_DIR=%Boost_DIR% %BLDLOG%
+@echo Established ENV Boost_DIR=%Boost_DIR% %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Establisted ENV Boost_DIR=%Boost_DIR%
+@echo Established ENV Boost_DIR=%Boost_DIR%
 )
 
 @set _TMP_LIBS=%_TMP_LIBS% BOOST
