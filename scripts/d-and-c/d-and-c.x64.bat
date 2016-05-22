@@ -1,6 +1,8 @@
 @setlocal
 @echo off
 @REM History, growing upwards...
+@REM d-and-c.x64.bat v1.3.11 20160522 - use external make3rd.x64.bat ...
+@set TMPMK3RD=make3rd.x64.bat
 @REM d-and-c.x64.bat v1.3.10 20160515 - use external _selectMSVC.x64.bat ...
 @REM d-and-c.x64.bat v1.3.9 20160515 - Name change... add .x64 build ...
 @REM d-and-c.bat v1.3.8 20160510 geoff - Fix config, gen, ...
@@ -31,7 +33,7 @@ set  error=0
 @set TMPDN3RD=make3rd.x64.txt
 
 @if NOT EXIST %TMPDN3RD% goto NO3RD
-
+:DONE_3RD
 @REM ######################################################################################
 @REM externa; setup
 @set TMP_MSVC=_selectMSVC.x64.bat
@@ -991,10 +993,29 @@ exit /b 0
 
 @REM ########### ERROR EXISTS ##########
 :NO3RD
+@REM Oops, the 3rdParty setup has NOT run, sans fault...
+@REM Do we have a setup batch file?
+@if NOT EXIST %TMPMK3RD% goto NO3RD2
+@REM Call it... to fix 3rd Party
+@call %TMPMK3RD% %BLDLOG%
+@if ERRORLEVEL 1 goto NO3RD1
+@echo A successful setup of %RDPARTY_DIR% %BLDLOG%
+@goto DONE_3RD
+:NO3RD1
+@set /A HAD_ERROR+=1
+@echo.
+@echo Ran %TMPDN3RD%, but still an error!
+@echo Sometimes just re-running %TMPDN3RD% can fix the problem...
+@echo If NOT, file an issue https://github.com/geoffmcl/test-sg/issues
+@echo Or fork the repo, find the problems, and present a PR... thanks...
+@echo.
+@goto ISERR
+
+:NO3RD2
 @set /A HAD_ERROR+=1
 @echo.
 @echo Can NOT locate file %TMPDN3RD%!
-@echo You need to run make3rd.x64.bat first to setup and populate the 3rdParty directory
+@echo And can NOT locate file %TMPMK3RD% to fix this...!
 @echo.
 @goto ISERR
 
