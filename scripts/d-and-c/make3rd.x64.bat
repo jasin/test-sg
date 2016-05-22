@@ -138,7 +138,6 @@ md %WORKSPACE%\%TMP3RD%\include
 @REM goto DO_JPEG
 
 :DO_ZLIB
-@set _TMP_LIBS=%_TMP_LIBS% ZLIB
 @echo %0: ############################# Download ^& compile ZLIB %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile ZLIB
@@ -193,7 +192,7 @@ ECHO Doing 'cmake --build . --config Release --target INSTALL' %BLDLOG%
 IF %HAVELOG% EQU 1 (
 ECHO Doing 'cmake --build . --config Release --target INSTALL'
 )
-cmake --build . --config Release --target INSTALL
+cmake --build . --config Release --target INSTALL >> %ERRLOG% 2>&1
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC%
@@ -203,12 +202,13 @@ cmake --build . --config Release --target INSTALL
 xcopy %WORKSPACE%\zlib-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
 xcopy %WORKSPACE%\zlib-build\build\lib\zlib.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 xcopy %WORKSPACE%\zlib-build\build\bin\zlib.dll %WORKSPACE%\%TMP3RD%\bin /y /q
-
+@if EXIST %WORKSPACE%\%TMP3RD%\include\zlib.h (
+@set _TMP_LIBS=%_TMP_LIBS% ZLIB
+)
 :DN_ZLIB
 cd %WORKSPACE%
 
 :DO_TIFF
-@set _TMP_LIBS=%_TMP_LIBS% TIFF
 @echo %0: ############################# Download ^& compile LIBTIFF %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBTIFF to %LOGFIL%
@@ -258,12 +258,13 @@ xcopy %WORKSPACE%\libtiff-source\libtiff\tiff.h %WORKSPACE%\%TMP3RD%\include\ /y
 xcopy %WORKSPACE%\libtiff-source\libtiff\tiffconf.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libtiff-source\libtiff\tiffio.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libtiff-source\libtiff\tiffvers.h %WORKSPACE%\%TMP3RD%\include\ /y /f
-
+@if EXIST %WORKSPACE%\%TMP3RD%\include\tiff.h (
+@set _TMP_LIBS=%_TMP_LIBS% TIFF
+)
 :DN_TIFF
 cd %WORKSPACE%
 
 :DO_PNG
-@set _TMP_LIBS=%_TMP_LIBS% PNG
 @echo %0: ############################# Download ^& compile LIBPNG %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBPNG to %LOGFIL%
@@ -324,10 +325,14 @@ cmake --build . --config Release --target INSTALL %BLDLOG%
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC% >> %ERRLOG%
 )
 
+cd %WORKSPACE%
+
 xcopy %WORKSPACE%\libpng-build\build\include\*.h %WORKSPACE%\%TMP3RD%\include /y
 xcopy %WORKSPACE%\libpng-build\build\lib\libpng16.lib %WORKSPACE%\%TMP3RD%\lib /y
 xcopy %WORKSPACE%\libpng-build\build\bin\libpng16.dll %WORKSPACE%\%TMP3RD%\bin /y
-
+@if EXIST %WORKSPACE%\%TMP3RD%\include\png.h (
+@set _TMP_LIBS=%_TMP_LIBS% PNG
+)
 :DN_PNG
 cd %WORKSPACE%
 :DO_JPEG
@@ -1109,7 +1114,6 @@ xcopy %WORKSPACE%\libexpat-build\build\include\* %WORKSPACE%\%TMP3RD%\include /s
 cd %WORKSPACE%
 
 :DO_PLIB
-@set _TMP_LIBS=%_TMP_LIBS% PLIB
 @call :SET_BOOST
 @echo %0: ############################# Download ^& compile PLIB %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -1187,6 +1191,7 @@ xcopy %WORKSPACE%\plib-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s 
 xcopy %WORKSPACE%\plib-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 @REM xcopy %WORKSPACE%\plib-build\build\bin\zlib.dll %WORKSPACE%\%TMP3RD%\bin /y /q
 @echo Done PLIB...
+@set _TMP_LIBS=%_TMP_LIBS% PLIB
 :DN_PLIB
 cd %WORKSPACE%
 @REM external builds
@@ -1211,6 +1216,7 @@ cd %WORKSPACE%
 @goto DN_AL
 :GOT_AL
 @echo Found %_TMP_ALI%... done AL
+@set _TMP_LIBS=%_TMP_LIBS% OpenAL
 :DN_AL
 
 :END
