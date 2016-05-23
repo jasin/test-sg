@@ -16,6 +16,7 @@
 @set HAD_ERROR=0
 set  error=0
 @set PWD=%CD%
+@set "WORKSPACE=%CD%"
 @set INSTALL_DIR=%PWD%\install
 @REM set FG_ROOT=x:\fgdata
 @set FG_ROOT=%INSTALL_DIR%\fgdata
@@ -32,12 +33,43 @@ set  error=0
 @set HAVELOG=1
 @set TMPDN3RD=make3rd.x64.txt
 
-@if NOT EXIST %TMPDN3RD% goto NO3RD
+@if EXIST %TMPDN3RD% goto DONE_3RD
+
+:NO3RD
+@REM Oops, the 3rdParty setup has NOT run, sans fault...
+@REM Do we have a setup batch file?
+@if NOT EXIST %TMPMK3RD% goto NO3RD2
+@REM Call it... to fix 3rd Party
+@echo Doing: 'call %TMPMK3RD%' ... to fix 3rd Party
+@call %TMPMK3RD%
+@if ERRORLEVEL 1 goto NO3RD1
+@if NOT EXIST %TMPDN3RD% goto NO3RD1
+@echo A successful setup of %RDPARTY_DIR% %BLDLOG%
+@goto DONE_3RD
+
+:NO3RD1
+@set /A HAD_ERROR+=1
+@echo.
+@echo Ran %TMPDN3RD%, but still an error!
+@echo Sometimes just re-running %TMPDN3RD% can fix the problem...
+@echo If NOT, file an issue https://github.com/geoffmcl/test-sg/issues
+@echo Or fork the repo, find the problems, and present a PR... thanks...
+@echo.
+@goto ISERR
+
+:NO3RD2
+@set /A HAD_ERROR+=1
+@echo.
+@echo Can NOT locate file %TMPDN3RD%!
+@echo And can NOT locate file %TMPMK3RD% to fix this...!
+@echo.
+@goto ISERR
+
 :DONE_3RD
 @REM ######################################################################################
 @REM externa; setup
 @set TMP_MSVC=_selectMSVC.x64.bat
-@set "WORKSPACE=%CD%"
+@if NOT "%RDPARTY_DIR%x" == "x" goto DNSEL
 @if NOT EXIST %TMP_MSVC% goto NO_MSVC_SEL 
 
 @REM Switch MSVC Version
@@ -71,7 +103,7 @@ set  error=0
 @echo.
 @goto ISERR
 )
-
+:DNSEL
 @REM MSVC has been setup, do NOT call this a 2nd time
 @set VS_BAT=
 
@@ -684,6 +716,12 @@ IF NOT exist flightgear (mkdir flightgear)
 cd flightgear
 @echo In flightgear build directory %CD%
 @REM		-DCMAKE_BUILD_TYPE="Release"
+@REM Wow, this FAILED to find dxguid.lib
+@REM if _MSVS GTR 10 goto DN_DXSDK
+@REM set LIB=%DXSDK_DIR%Lib\x64;%LIB%
+@REM set PATH=%DXSDK_DIR%Lib\x64;%PATH%
+@REM echo Add extra LIB PATH '%DXSDK_DIR%Lib\x64'
+@REM :DN_DXSDK
 @set TMPOPTS=-G "%GENERATOR%" -DWITH_FGPANEL=OFF -DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" ^
 -DMSVC_3RDPARTY_ROOT="%RDPARTY_INSTALL_DIR%" -DBOOST_ROOT="%BOOST_INSTALL_DIR%" ^
 -DCMAKE_PREFIX_PATH="%BOOST_INSTALL_DIR%;%OSG_INSTALL_DIR%;%SIMGEAR_INSTALL_DIR%;%RDPARTY_INSTALL_DIR%" ^
@@ -992,33 +1030,6 @@ echo #########         D  #########
 exit /b 0
 
 @REM ########### ERROR EXISTS ##########
-:NO3RD
-@REM Oops, the 3rdParty setup has NOT run, sans fault...
-@REM Do we have a setup batch file?
-@if NOT EXIST %TMPMK3RD% goto NO3RD2
-@REM Call it... to fix 3rd Party
-@call %TMPMK3RD% %BLDLOG%
-@if ERRORLEVEL 1 goto NO3RD1
-@echo A successful setup of %RDPARTY_DIR% %BLDLOG%
-@goto DONE_3RD
-:NO3RD1
-@set /A HAD_ERROR+=1
-@echo.
-@echo Ran %TMPDN3RD%, but still an error!
-@echo Sometimes just re-running %TMPDN3RD% can fix the problem...
-@echo If NOT, file an issue https://github.com/geoffmcl/test-sg/issues
-@echo Or fork the repo, find the problems, and present a PR... thanks...
-@echo.
-@goto ISERR
-
-:NO3RD2
-@set /A HAD_ERROR+=1
-@echo.
-@echo Can NOT locate file %TMPDN3RD%!
-@echo And can NOT locate file %TMPMK3RD% to fix this...!
-@echo.
-@goto ISERR
-
 :NO_MSVC_SEL
 @set /A HAD_ERROR+=1
 @echo.
