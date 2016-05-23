@@ -1,6 +1,7 @@
 @setlocal
 @REM ###########################################################################
 @REM ################### Build Boost download source & build ###################
+@REM ################### Version 20160523 ######################################
 @REM ###########################################################################
 
 @set PWD=%CD%
@@ -38,13 +39,17 @@
         @if ERRORLEVEL 1 goto NODWN
         
     )
-    @if NOT EXIST %_TMP_BZ7% (
-        @echo ERROR: Failed in call %GET_EXE% %GET_OPT% %_TMP_BZ7% %BOOST_URL%
-        @set %HAD_ERR%+=1
-        @goto ISERR
+    @if NOT EXIST boost_%BOOST_DASH_VER% (
+        @if NOT EXIST %_TMP_BZ7% (
+            @echo ERROR: Failed in call %GET_EXE% %GET_OPT% %_TMP_BZ7% %BOOST_URL%
+            @set %HAD_ERR%+=1
+            @goto ISERR
+        )
+        @call %UZ_EXE% %UZ_OPT% %_TMP_BZ7%
     )
-    @call %UZ_EXE% %UZ_OPT% %_TMP_BZ7%
+    @if NOT EXIST boost_%BOOST_DASH_VER% goto NOUNZ
     @ren boost_%BOOST_DASH_VER% Boost
+    @if ERRORLEVEL 1 goto NOREN
 )
 @if NOT exist Boost\nul goto NOBOOST
 @call build-boost.x64
@@ -58,24 +63,42 @@ echo Done Boost ... set ENV Boost_DIR=%Boost_DIR%
 @echo.
 @echo ERROR: RDPARTY NOT set in the ENV!
 @echo.
+@set %HAD_ERR%+=1
 @goto ISERR
 
 :NODWN
 @echo.
 @echo ERROR: Failed download of %_TMP_BZ7%!
 @echo.
+@set %HAD_ERR%+=1
+@goto ISERR
+
+:NOUNZ
+@echo.
+@echo ERROR: Failed 'call %UZ_EXE% %UZ_OPT% %_TMP_BZ7%`
+@echo.
+@set %HAD_ERR%+=1
+@goto ISERR
+
+:NOREN
+@echo.
+@echo ERROR: Failed 'ren boost_%BOOST_DASH_VER% Boost`
+@echo.
+@set %HAD_ERR%+=1
 @goto ISERR
 
 :NOBOOST
 @echo.
 @echo ERROR: No Boost source directory created!
 @echo.
+@set %HAD_ERR%+=1
 @goto ISERR
 
 :NOBLD
 @echo.
 @echo ERROR: Boost build has FAILED!
 @echo.
+@set %HAD_ERR%+=1
 @goto ISERR
 
 :ISERR
