@@ -59,6 +59,8 @@
 @REM set TMPINST=F:\Projects\software.x64
 @set TMPOPTS=-DCMAKE_INSTALL_PREFIX=%TMPINST%
 @set TMPOPTS=%TMPOPTS% -G "%GENERATOR%"
+@REM This component requies Qt, but missing 'log2' math func
+@set TMPOPTS=%TMPOPTS% -DALSOFT_NO_CONFIG_UTIL:BOOL=ON
 
 @REM call chkmsvc %TMPPRJ%
 
