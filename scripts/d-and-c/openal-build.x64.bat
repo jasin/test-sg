@@ -21,8 +21,9 @@
 @set TMPINST=%CD%\%RDPARTY_DIR%
 
 @if EXIST %TMPSRC%\nul goto GOT_SRC
-@REM no source, git it...
-@set TMPREPO=git://repo.or.cz/openal-soft.git
+@REM no source, git it... 20160523 - try GITHUB
+@set TMPREPO=git@github.com:kcat/openal-soft.git
+@REM set TMPREPO=git://repo.or.cz/openal-soft.git
 @set TMPDIR=openal-source
 @call git clone %TMPREPO% %TMPDIR%
 @if ERRORLEVEL 1 goto NO_AL_CLONE
