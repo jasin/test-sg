@@ -842,14 +842,41 @@ IF exist "%PWD%"\terragear (
 ) ELSE (
     echo Cloning "%TG_REPO%"...
     CALL %GIT_EXE% clone "%TG_REPO%"
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo 'CALL %GIT_EXE% clone "%TG_REPO%"' FAILED!
+        goto done_terra
+    )
 )
 
 @cd "%PWD%"\terragear
+@if ERRORLEVEL 1 (
+    @set /A HAD_ERROR+=1
+    @echo 'cd "%PWD%"\terragear' FAILED!
+    goto done_terra
+)
+
 @CALL %GIT_EXE% checkout "%TG_BRANCH%"
+@if ERRORLEVEL 1 (
+    @set /A HAD_ERROR+=1
+    @echo 'CALL %GIT_EXE% checkout "%TG_BRANCH%"' FAILED!
+    goto done_terra
+)
 
 @cd "%PWD%"\build
+@if ERRORLEVEL 1 (
+    @set /A HAD_ERROR+=1
+    @echo 'cd "%PWD%"\build' FAILED!
+    goto done_terra
+)
 IF NOT exist terragear (mkdir terragear)
-cd terragear
+@cd terragear
+@if ERRORLEVEL 1 (
+    @set /A HAD_ERROR+=1
+    @echo 'cd terragear' FAILED!
+    goto done_terra
+)
+
 IF %CMAKE% EQU 1 (
 	@DEL CMakeCache.txt 2>nul
     @IF %HAVELOG% EQU 1 (
@@ -863,9 +890,19 @@ IF %CMAKE% EQU 1 (
 		-DJPEG_LIBRARY="%RDPARTY_INSTALL_DIR%\lib\jpeg.lib" ^
 		-DCMAKE_INSTALL_PREFIX:PATH="%TERRAGEAR_INSTALL_DIR%" ^
 		-DCMAKE_PREFIX_PATH="%SIMGEAR_INSTALL_DIR%;%CGAL_INSTALL_DIR%;%BOOST_INSTALL_DIR%" %BLDLOG%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo 'cmake config/gen ...' FAILED!
+        goto done_terra
+    )
 )
 @IF %COMPILE% EQU 1 (
 	@CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL %BLDLOG%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo 'CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL' FAILED!
+        goto done_terra
+    )
 )
 @cd "%PWD%"
 
@@ -903,6 +940,9 @@ ECHO WARNING: No GDAL DLL found in "%RDPARTY_INSTALL_DIR%\bin"!
 @xcopy "%RDPARTY_INSTALL_DIR%"\bin\libcurl.dll "%TERRAGEAR_INSTALL_DIR%"\bin\* /s /e /i /Y /q
 @xcopy "%CGAL_PATH%"\auxiliary\gmp\lib\*.dll "%TERRAGEAR_INSTALL_DIR%"\bin\* /s /e /i /Y /q
 @echo Done...
+:done_terra
+
+@cd "%PWD%"
 
 @IF %BUILD_ALL% EQU 0 (
     @SHIFT
@@ -1018,6 +1058,7 @@ IF %BUILD_ALL% EQU 0 (
 IF %HAVELOG% EQU 1 (
     ECHO "See output in %LOGFIL%" 
 )
+@if %HAD_ERROR% GTR 0 goto HAD_ERRORS
 echo #########  F         #########
 echo #########   I        #########
 echo #########    N       #########
@@ -1030,6 +1071,10 @@ echo #########         D  #########
 exit /b 0
 
 @REM ########### ERROR EXISTS ##########
+:HAD_ERRORS
+@echo Finished with errors %HAD_ERRORS%
+@goto ISERR
+
 :NO_MSVC_SEL
 @set /A HAD_ERROR+=1
 @echo.
