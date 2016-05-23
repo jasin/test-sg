@@ -67,7 +67,7 @@
 @REM Uncomment this, and add to config/build line, if you can output to a LOG
 @set BLDLOG= ^>^> %LOGFIL% 2^>^&1
 @set ERRLOG=%WORKSPACE%\error-2.txt
-@set ADD_GDAL=0
+@set ADD_GDAL=1
 @set HAVELOG=1
 
 @REM call setupqt64
