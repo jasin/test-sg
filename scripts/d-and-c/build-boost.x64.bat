@@ -141,7 +141,7 @@ call %TMPBS%
 @REM Maybe NOT required for 'stage' build
 @REM set B2OPTS=%B2OPTS% --prefix="%TMPINST%"
 @REM limit the build to just 'system' and 'thread'
-@set B2OPTS=%B2OPTS% --with-system --with-thread
+@set B2OPTS=%B2OPTS% --with-system --with-thread --with-date_time
 
 @set TMPOPTS=%B2OPTS%
 @if "%SHOW_LIBS%x" == "1x" (
