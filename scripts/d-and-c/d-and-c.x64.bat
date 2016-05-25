@@ -863,6 +863,13 @@ IF exist "%PWD%"\terragear (
     goto done_terra
 )
 
+@cd "%PWD%"
+@set _TMP_FIL=FindCGAL.cmake
+@if EXIST terragear\CMakeModules\%_TMP_FIL% goto DN_TG_CGAL
+@if NOT EXIST libcgal-source\cmake\modules\%_TMP_FIL% goto DN_TG_CGAL
+@copy libcgal-source\cmake\modules\FindCGAL*.cmake terragear\CMakeModules\.
+:DN_TG_CGAL
+
 @cd "%PWD%"\build
 @if ERRORLEVEL 1 (
     @set /A HAD_ERROR+=1
@@ -879,6 +886,9 @@ IF NOT exist terragear (mkdir terragear)
 
 IF %CMAKE% EQU 1 (
 	@DEL CMakeCache.txt 2>nul
+    @set CGAL_DIR=%PWD%\%RDPARTY_DIR%\lib\CGAL
+    @echo set ENV CGAL_DIR=%CGAL_DIR%
+    @echo set ENV CGAL_DIR=%CGAL_DIR% %BLDLOG%
     @IF %HAVELOG% EQU 1 (
         @ECHO "Doing: 'CALL %CMAKE_EXE% ..\..\terragear -G %GENERATOR% -DCMAKE_BUILD_TYPE="Release" -DBOOST_ROOT=%BOOST_INSTALL_DIR% -DJPEG_LIBRARY=%RDPARTY_INSTALL_DIR%\lib\jpeg.lib -DCMAKE_INSTALL_PREFIX:PATH=%TERRAGEAR_INSTALL_DIR% -DCMAKE_PREFIX_PATH=%SIMGEAR_INSTALL_DIR%;%CGAL_INSTALL_DIR%;%BOOST_INSTALL_DIR%' output to %LOGFIL%" 
     )
