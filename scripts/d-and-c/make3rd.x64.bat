@@ -520,7 +520,6 @@ xcopy %WORKSPACE%\libcurl-build\build\bin\curl.exe %WORKSPACE%\%TMP3RD%\bin /y /
 cd %WORKSPACE%
 :DO_GDAL 
 @if %ADD_GDAL% EQU 0 goto DN_GDAL
-@set _TMP_LIBS=%_TMP_LIBS% GDAL
  
 @echo %0: ############################# Download ^& compile GDAL %CD% %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -529,19 +528,40 @@ IF %HAVELOG% EQU 1 (
 @REM set TMP_URL=https://svn.osgeo.org/gdal/trunk/gdal
 @REM This SVN source FAILED to link with CGAL
 @set TMP_SRC=libgdal-source
-@set TMP_URL=http://download.osgeo.org/gdal/1.11.0/gdal1110.zip
+@set TMP_URL=http://download.osgeo.org/gdal/2.0.0/gdal200.zip
+@set TMP_DIR=gdal-2.0.0
+@REM set TMP_URL=http://download.osgeo.org/gdal/2.1.0/gdal210.zip
+@REM set TMP_URL=http://download.osgeo.org/gdal/1.11.0/gdal1110.zip
 @set TMP_ZIP=libgdal.zip
-@set TMP_DIR=gdal-1.11.0
 
 @if NOT EXIST %TMP_ZIP% ( 
-CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%
+    @echo Doing: 'CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%'
+    @CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP% %BLDLOG%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo HAD_ERROR: Failed 'CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%'
+        @echo HAD_ERROR: Failed 'CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%' %BLDLOG%
+        @goto DN_GDAL
+    )
 )
 @if NOT EXIST %TMP_SRC%\nul (
 @if NOT EXIST %TMP_DIR%\nul (
-CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
+        @CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
+        @if ERRORLEVEL 1 (
+            @set /A HAD_ERROR+=1
+            @echo HAD_ERROR: Failed 'CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%'
+            @echo HAD_ERROR: Failed 'CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%' %BLDLOG%
+            @goto DN_GDAL
+        )
 )
 CALL :SLEEP1
 REN %TMP_DIR% %TMP_SRC%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo HAD_ERROR: Failed 'REN %TMP_DIR% %TMP_SRC%'
+        @echo HAD_ERROR: Failed 'REN %TMP_DIR% %TMP_SRC%' %BLDLOG%
+        @goto DN_GDAL
+    )
 )
 
 if NOT EXIST %TMP_SRC%\nul (
@@ -551,16 +571,17 @@ if NOT EXIST %TMP_SRC%\nul (
 @goto DN_GDAL
 )
 
-CD %TMP_SRC%
-ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' %BLDLOG%
-IF %HAVELOG% EQU 1 (
-ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' to %LOGFIL%
+@CD %TMP_SRC%
+@ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' %BLDLOG%
+@IF %HAVELOG% EQU 1 (
+@ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' to %LOGFIL%
 )
-nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES %BLDLOG%
+@nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES %BLDLOG%
 @if ERRORLEVEL 1 (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Error exit nmake building source %TMP_SRC% in %CD%
-@echo %HAD_ERROR%: Error exit nmake building source %TMP_SRC% in %CD% >> %ERRLOG%
+    @set /A HAD_ERROR+=1
+    @echo %HAD_ERROR%: Error exit nmake building source %TMP_SRC% in %CD%
+    @echo %HAD_ERROR%: Error exit nmake building source %TMP_SRC% in %CD% >> %ERRLOG%
+    @goto DN_GDAL
 )
 
 cd %WORKSPACE%
@@ -579,6 +600,8 @@ xcopy %WORKSPACE%\libgdal-source\port\cpl*.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\gdal_i.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
 xcopy %WORKSPACE%\libgdal-source\gdal.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
 xcopy %WORKSPACE%\libgdal-source\gdal*.dll %WORKSPACE%\%TMP3RD%\bin\ /y /f
+
+@set _TMP_LIBS=%_TMP_LIBS% GDAL
 
 :DN_GDAL
 cd %WORKSPACE%
@@ -685,7 +708,6 @@ IF %HAVELOG% EQU 1 (
 cd %WORKSPACE%
 
 :DO_CGAL
-@set _TMP_LIBS=%_TMP_LIBS% CGAL
 @call :SET_BOOST
 
 @echo %0: ############################# Download ^& compile CGAL %BLDLOG%
@@ -800,15 +822,18 @@ cd %WORKSPACE%
 
 @echo Doing: xcopy %WORKSPACE%\libcgal-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
 xcopy %WORKSPACE%\libcgal-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
-@echo Doing: xcopy %WORKSPACE%\libcgal-build\build\bin\*.dll %WORKSPACE%\%TMP3RD%\bin /y /s /q
-xcopy %WORKSPACE%\libcgal-build\build\bin\*.dll %WORKSPACE%\%TMP3RD%\bin /y /s /q
-@echo Doing: xcopy %WORKSPACE%\libcgal-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /s /q
-xcopy %WORKSPACE%\libcgal-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /s /q
+@echo Doing: xcopy %WORKSPACE%\libcgal-build\build\bin\* %WORKSPACE%\%TMP3RD%\bin /y /s /q
+xcopy %WORKSPACE%\libcgal-build\build\bin\* %WORKSPACE%\%TMP3RD%\bin /y /s /q
+@echo Doing: xcopy %WORKSPACE%\libcgal-build\build\lib\* %WORKSPACE%\%TMP3RD%\lib /y /s /q
+xcopy %WORKSPACE%\libcgal-build\build\lib\* %WORKSPACE%\%TMP3RD%\lib /y /s /q
+
 @echo Doing: xcopy %WORKSPACE%\libcgal-source\auxiliary\gmp\lib\*.dll %WORKSPACE%\%TMP3RD%\bin /s /y /q
 xcopy %WORKSPACE%\libcgal-source\auxiliary\gmp\lib\*.dll %WORKSPACE%\%TMP3RD%\bin /s /y /q
 @echo Doing: xcopy %WORKSPACE%\libcgal-source\auxiliary\gmp\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /s /y /q
 xcopy %WORKSPACE%\libcgal-source\auxiliary\gmp\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /s /y /q
  
+@set _TMP_LIBS=%_TMP_LIBS% CGAL
+
 :DN_CGAL
 cd %WORKSPACE%
 @REM TEST EXIT
