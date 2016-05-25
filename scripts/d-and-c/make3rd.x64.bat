@@ -545,7 +545,7 @@ IF %HAVELOG% EQU 1 (
     )
 )
 @if NOT EXIST %TMP_SRC%\nul (
-@if NOT EXIST %TMP_DIR%\nul (
+    @if NOT EXIST %TMP_DIR%\nul (
         @CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
         @if ERRORLEVEL 1 (
             @set /A HAD_ERROR+=1
@@ -553,9 +553,9 @@ IF %HAVELOG% EQU 1 (
             @echo HAD_ERROR: Failed 'CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%' %BLDLOG%
             @goto DN_GDAL
         )
-)
-CALL :SLEEP1
-REN %TMP_DIR% %TMP_SRC%
+    )
+    CALL :SLEEP1
+    REN %TMP_DIR% %TMP_SRC%
     @if ERRORLEVEL 1 (
         @set /A HAD_ERROR+=1
         @echo HAD_ERROR: Failed 'REN %TMP_DIR% %TMP_SRC%'
@@ -565,10 +565,10 @@ REN %TMP_DIR% %TMP_SRC%
 )
 
 if NOT EXIST %TMP_SRC%\nul (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Failed to set up %TMP_SRC%
-@echo %HAD_ERROR%: Failed to set up %TMP_SRC% >> %ERRLOG%
-@goto DN_GDAL
+    @set /A HAD_ERROR+=1
+    @echo %HAD_ERROR%: Failed to set up %TMP_SRC%
+    @echo %HAD_ERROR%: Failed to set up %TMP_SRC% >> %ERRLOG%
+    @goto DN_GDAL
 )
 
 @CD %TMP_SRC%
@@ -831,7 +831,7 @@ xcopy %WORKSPACE%\libcgal-build\build\lib\* %WORKSPACE%\%TMP3RD%\lib /y /s /q
 xcopy %WORKSPACE%\libcgal-source\auxiliary\gmp\lib\*.dll %WORKSPACE%\%TMP3RD%\bin /s /y /q
 @echo Doing: xcopy %WORKSPACE%\libcgal-source\auxiliary\gmp\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /s /y /q
 xcopy %WORKSPACE%\libcgal-source\auxiliary\gmp\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /s /y /q
- 
+
 @set _TMP_LIBS=%_TMP_LIBS% CGAL
 
 :DN_CGAL
